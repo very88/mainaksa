@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>MAIN-AKSA: Digitalisasi Permainan Rakyat untuk Kebugaran Jasmani</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+            },
+            aksa: {
+              neon: '#10b981',
+              accent: '#f43f5e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Mobile-first ergonomic styles */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    
+    /* Touch optimization */
+    button, input, select {
+      touch-action: manipulation;
+    }
+
+    /* Print Styles: Rapor Cetak Resmi PJOK */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-area, #print-area * {
+        visibility: visible;
+      }
+      #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        padding: 24px;
+        font-size: 12pt;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-black overflow-x-hidden">
+
+  <!-- MODAL: REGISTRASI TIM & PEMAIN (SEBELUM MULAI) -->
+  <div id="registration-modal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="glass-panel w-full max-w-md rounded-3xl p-5 sm:p-6 border border-brand-500/40 shadow-2xl relative flex flex-col gap-4 my-auto">
+      
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-aksa-neon p-0.5 flex items-center justify-center shadow-lg shadow-sky-500/30 shrink-0">
+          <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+            <i data-lucide="shield-check" class="w-5 h-5 text-brand-400"></i>
+          </div>
+        </div>
+        <div>
+          <h2 class="text-lg sm:text-xl font-black font-display text-white tracking-tight leading-tight">Pendaftaran Match Tim</h2>
+          <p class="text-[11px] text-slate-400">MAIN-AKSA • Pocket Motion & PJOK Tim</p>
+        </div>
+      </div>
+
+      <form id="team-form" onsubmit="handleRegistrationSubmit(event)" class="flex flex-col gap-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">Nama Tim / Kelompok</label>
+          <div class="relative">
+            <i data-lucide="users" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="reg-team-name" required placeholder="Contoh: Garuda Merah" class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs sm:text-sm focus:border-brand-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div class="col-span-2">
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Nama Siswa</label>
+            <div class="relative">
+              <i data-lucide="user" class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+              <input type="text" id="reg-player-name" required placeholder="Nama Lengkap" class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs sm:text-sm focus:border-brand-500 focus:outline-none">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">No Absen</label>
+            <input type="number" id="reg-player-no" required min="1" max="50" placeholder="01" class="w-full px-2.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs sm:text-sm focus:border-brand-500 text-center font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">Pilih Arena Permainan Tradisional</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="relative flex items-center p-2.5 rounded-xl border border-slate-700 bg-slate-900/80 cursor-pointer hover:border-brand-500/50">
+              <input type="radio" name="game-choice" value="gobak" checked class="text-brand-500">
+              <div class="ml-2">
+                <div class="text-xs font-bold text-white">Gobak Sodor</div>
+                <div class="text-[9px] text-slate-400">Cyber Sprint</div>
+              </div>
+            </label>
+            <label class="relative flex items-center p-2.5 rounded-xl border border-slate-700 bg-slate-900/80 cursor-pointer hover:border-brand-500/50">
+              <input type="radio" name="game-choice" value="bentengan" class="text-brand-500">
+              <div class="ml-2">
+                <div class="text-xs font-bold text-white">Bentengan</div>
+                <div class="text-[9px] text-slate-400">Power-Up Buff</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-sky-950/50 border border-sky-500/30 flex items-start gap-2 text-[11px] text-sky-200">
+          <i data-lucide="smartphone" class="w-4 h-4 text-brand-400 shrink-0 mt-0.5"></i>
+          <span><strong>Sensor Saku:</strong> Masukkan HP ke saku celana saat berlari, atau gunakan tombol sentuh di layar jika sensor tidak aktif.</span>
+        </div>
+
+        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-500 via-sky-400 to-aksa-neon text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all shadow-md shadow-sky-500/20">
+          <i data-lucide="play" class="w-4 h-4"></i> MASUK KE LAPANGAN
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- COMPACT MOBILE HEADER -->
+  <header class="relative z-20 border-b border-sky-950/60 glass-panel px-3 py-2 sm:px-4 sm:py-2.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
+      <!-- Logo & Profile Pill -->
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-500 to-aksa-neon p-0.5 flex items-center justify-center">
+          <div class="w-full h-full bg-slate-900 rounded-[6px] flex items-center justify-center">
+            <i data-lucide="zap" class="w-4 h-4 text-brand-400"></i>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-aksa-neon flex items-center gap-1.5">
+            MAIN-AKSA
+            <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-normal">v2.1</span>
+          </div>
+          <div class="text-[10px] text-slate-400 truncate max-w-[140px] sm:max-w-xs font-medium">
+            <span id="header-team" class="text-brand-300 font-bold">Tim: -</span> • <span id="header-player">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Icons / Quick Tools -->
+      <div class="flex items-center gap-1.5">
+        <button onclick="openRegistrationModal()" class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white" title="Ganti Tim/Pemain">
+          <i data-lucide="user-cog" class="w-4 h-4"></i>
+        </button>
+        <button onclick="openReportModal()" class="px-2.5 py-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-1 hover:bg-emerald-600/30 transition-all">
+          <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
+          <span>Rapor</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- QUICK MOBILE STATS HUD (FLUID ROW) -->
+  <section class="max-w-7xl mx-auto w-full px-3 pt-2">
+    <div class="grid grid-cols-4 gap-1.5 sm:gap-2">
+      <!-- Steps -->
+      <div class="bg-slate-900/90 border border-slate-800/80 rounded-xl p-2 text-center">
+        <div class="text-[9px] uppercase font-semibold text-slate-400 flex items-center justify-center gap-0.5">
+          <i data-lucide="footprints" class="w-3 h-3 text-aksa-neon"></i>
+          <span>Langkah</span>
+        </div>
+        <div id="stat-steps" class="text-xs sm:text-sm font-bold font-mono text-emerald-300 mt-0.5">0</div>
+      </div>
+      <!-- Calories -->
+      <div class="bg-slate-900/90 border border-slate-800/80 rounded-xl p-2 text-center">
+        <div class="text-[9px] uppercase font-semibold text-slate-400 flex items-center justify-center gap-0.5">
+          <i data-lucide="flame" class="w-3 h-3 text-orange-400"></i>
+          <span>Kalori</span>
+        </div>
+        <div id="stat-calorie" class="text-xs sm:text-sm font-bold font-mono text-orange-300 mt-0.5">0.0 kcal</div>
+      </div>
+      <!-- Heart Rate THR -->
+      <div class="bg-slate-900/90 border border-slate-800/80 rounded-xl p-2 text-center">
+        <div class="text-[9px] uppercase font-semibold text-slate-400 flex items-center justify-center gap-0.5">
+          <i data-lucide="heart" class="w-3 h-3 text-rose-500"></i>
+          <span>Nadi</span>
+        </div>
+        <div id="stat-bpm" class="text-xs sm:text-sm font-bold font-mono text-rose-300 mt-0.5">75 BPM</div>
+      </div>
+      <!-- Team Score -->
+      <div class="bg-sky-950/50 border border-brand-500/30 rounded-xl p-2 text-center">
+        <div class="text-[9px] uppercase font-semibold text-brand-300 flex items-center justify-center gap-0.5">
+          <i data-lucide="trophy" class="w-3 h-3 text-amber-400"></i>
+          <span>Poin</span>
+        </div>
+        <div id="stat-score" class="text-xs sm:text-sm font-bold font-mono text-amber-300 mt-0.5">0 pts</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN ARENA STAGE (MOBILE OPTIMIZED) -->
+  <main class="max-w-7xl mx-auto w-full p-3 flex-1 flex flex-col gap-3">
+    
+    <!-- Canvas Field Container -->
+    <div class="relative glass-panel rounded-2xl p-2 sm:p-3 flex-1 flex flex-col overflow-hidden min-h-[300px] sm:min-h-[380px] shadow-lg border border-sky-500/20">
+      
+      <!-- Inside Canvas Top Info -->
+      <div class="flex items-center justify-between text-xs mb-1.5 px-1">
+        <div class="flex items-center gap-1.5">
+          <span id="arena-title-tag" class="px-2 py-0.5 rounded-md bg-brand-500/20 text-brand-300 text-[10px] font-bold border border-brand-500/30">
+            GOBAK SODOR
+          </span>
+          <span class="text-[10px] text-amber-400 font-mono font-bold px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800" id="match-timer">
+            02:00
+          </span>
+        </div>
+        <div class="flex items-center gap-1 text-[10px]">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" id="sensor-dot"></span>
+          <span id="sensor-status-txt" class="text-slate-300 font-mono">Sentuh / Saku Siap</span>
+        </div>
+      </div>
+
+      <!-- Canvas -->
+      <div class="relative flex-1 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
+        <canvas id="arenaCanvas" class="w-full h-full block touch-none"></canvas>
+
+        <!-- Overlay Start Screen -->
+        <div id="arena-overlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-20 transition-all">
+          <div class="w-12 h-12 rounded-xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center mb-2">
+            <i data-lucide="smartphone" class="w-6 h-6 text-brand-400"></i>
+          </div>
+          <h3 id="overlay-title" class="text-base sm:text-lg font-bold font-display text-white">Siap Mulai di Lapangan?</h3>
+          <p id="overlay-desc" class="text-[11px] text-slate-300 max-w-xs mt-1 mb-4 leading-relaxed">
+            Aktifkan sensor saku lalu masukkan HP ke saku celana. Berlarilah saat match berlangsung!
+          </p>
+          <div class="flex flex-col w-full max-w-xs gap-2">
+            <button onclick="enablePocketSensor()" id="btn-enable-sensor" class="w-full py-2.5 rounded-xl font-bold text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center justify-center gap-1.5 shadow-md">
+              <i data-lucide="activity" class="w-4 h-4"></i>
+              1. AKTIFKAN SENSOR SAKU (HP)
+            </button>
+            <button onclick="startMatch()" class="w-full py-2.5 rounded-xl font-black text-xs bg-brand-500 hover:bg-brand-400 text-slate-950 flex items-center justify-center gap-1.5 shadow-md">
+              <i data-lucide="play" class="w-4 h-4"></i>
+              2. MULAI PERTANDINGAN
+            </button>
+          </div>
+        </div>
+
+        <!-- Respawn Penalty Alert Overlay -->
+        <div id="respawn-banner" class="absolute inset-x-2 top-2 bg-rose-600/90 border border-rose-400 p-2.5 rounded-xl text-center text-white hidden z-20 backdrop-blur-md shadow-xl">
+          <div class="text-[11px] font-black uppercase flex items-center justify-center gap-1">
+            <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-300"></i> TERSENTUH LAWAN!
+          </div>
+          <div class="text-[10px] text-rose-100 mt-0.5">
+            Lakukan <strong>10x Lompatan / Sentuh Tombol</strong> untuk Respawn! (<span id="respawn-count">0</span>/10)
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons Row (Ergonomic for Thumb Tap) -->
+      <div class="mt-2 grid grid-cols-3 gap-2">
+        <button id="btn-primary-trigger" onmousedown="triggerPhysicalAction('tap')" class="col-span-2 py-3.5 rounded-xl bg-gradient-to-r from-brand-500 to-sky-400 active:from-brand-600 active:to-sky-500 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 active:scale-95 transition-all">
+          <i data-lucide="zap" class="w-4 h-4"></i>
+          <span>LANGKAH / SPRINT (KETUK)</span>
+        </button>
+        <button onclick="resetMatch()" class="py-3.5 rounded-xl bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          <span>Reset</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ARENA TOGGLE & THR SETTINGS PILL -->
+    <div class="grid grid-cols-2 gap-2 text-xs">
+      <button onclick="switchMode('gobak')" id="tab-gobak" class="p-2.5 rounded-xl border border-brand-500/60 bg-slate-900 text-brand-300 font-bold text-center">
+        Gobak Sodor (Sprint)
+      </button>
+      <button onclick="switchMode('bentengan')" id="tab-bentengan" class="p-2.5 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-400 font-bold text-center">
+        Bentengan (Power-Up)
+      </button>
+    </div>
+
+  </main>
+
+  <!-- RAPOR KINERJA & CETAK PDF MODAL -->
+  <div id="report-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+    <div class="glass-panel w-full max-w-lg rounded-3xl p-5 sm:p-6 border border-brand-500/30 shadow-2xl relative flex flex-col gap-4 my-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800 no-print">
+        <div class="flex items-center gap-2">
+          <i data-lucide="award" class="w-5 h-5 text-brand-400"></i>
+          <h3 class="text-sm sm:text-base font-bold text-white font-display">Rapor Kinerja Digital MAIN-AKSA</h3>
+        </div>
+        <button onclick="closeReportModal()" class="p-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- PRINTABLE AREA (Target Cetak PDF) -->
+      <div id="print-area" class="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 text-slate-200 text-xs flex flex-col gap-3">
+        <!-- Print Letterhead -->
+        <div class="border-b border-slate-700 pb-2 text-center">
+          <h2 class="text-base font-black font-display uppercase tracking-wider text-brand-400">LEMBAR PENILAIAN HASIL PRAKTIK PJOK</h2>
+          <p class="text-[10px] text-slate-400">Inovasi Pembelajaran: MAIN-AKSA (Gamifikasi Permainan Tradisional Berbasis Sensor)</p>
+        </div>
+
+        <!-- Student & Team Meta -->
+        <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+          <div>
+            <span class="text-slate-400 block text-[9px] uppercase">Nama Peserta Didik:</span>
+            <strong class="text-white text-xs" id="pdf-player-name">Budi Santoso</strong>
+            <span class="text-slate-400 block text-[9px] uppercase mt-1">Nomor Absen:</span>
+            <strong class="text-slate-200" id="pdf-player-no">01</strong>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[9px] uppercase">Nama Tim / Guild:</span>
+            <strong class="text-brand-300 text-xs" id="pdf-team-name">Garuda Merah</strong>
+            <span class="text-slate-400 block text-[9px] uppercase mt-1">Arena Praktik:</span>
+            <strong class="text-slate-200" id="pdf-arena">Gobak Sodor</strong>
+          </div>
+        </div>
+
+        <!-- Metric Table -->
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="p-2 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-[9px] text-slate-400 uppercase">Langkah Fisik</div>
+            <div class="text-sm font-bold font-mono text-emerald-400 mt-0.5" id="pdf-steps">0</div>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-[9px] text-slate-400 uppercase">Estimasi Kalori</div>
+            <div class="text-sm font-bold font-mono text-orange-400 mt-0.5" id="pdf-cals">0.0 kcal</div>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-[9px] text-slate-400 uppercase">Poin Tim</div>
+            <div class="text-sm font-bold font-mono text-amber-300 mt-0.5" id="pdf-score">0 pts</div>
+          </div>
+        </div>
+
+        <!-- Learning Competency Result -->
+        <div class="space-y-1.5 text-[10px]">
+          <div class="font-bold text-slate-300">Deskripsi Capaian Pembelajaran:</div>
+          <div class="p-2 rounded-lg bg-slate-950/50 border border-slate-800/80 leading-relaxed text-slate-300">
+            Peserta didik telah menyelesaikan aktivitas kebugaran kardiorespirasi melalui olahraga tradisional dengan capaian denyut nadi <strong class="text-rose-400" id="pdf-bpm">155 BPM</strong> (Target Aerobik 60-85% Terpenuhi). Siswa menunjukkan kelincahan gerak, agilitas, dan kerja sama tim yang solid.
+          </div>
+        </div>
+
+        <!-- Signature Space (For Print) -->
+        <div class="grid grid-cols-2 pt-4 text-center text-[10px] text-slate-400 border-t border-slate-800 mt-1">
+          <div>
+            <div>Peserta Didik,</div>
+            <div class="h-10"></div>
+            <div class="font-bold text-slate-200" id="pdf-sign-student">( ..................................... )</div>
+          </div>
+          <div>
+            <div>Guru Mata Pelajaran PJOK,</div>
+            <div class="h-10"></div>
+            <div class="font-bold text-slate-200">( ..................................... )</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons Modal -->
+      <div class="flex items-center justify-end gap-2 pt-1 no-print">
+        <button onclick="printStudentReport()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-md">
+          <i data-lucide="printer" class="w-4 h-4"></i>
+          <span>CETAK / SIMPAN PDF</span>
+        </button>
+        <button onclick="closeReportModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs">
+          Tutup
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APP LOGIC -->
+  <script>
+    /* STATE */
+    let teamName = "Garuda Merah";
+    let playerName = "Siswa PJOK";
+    let playerNo = "01";
+    let activeArena = "gobak";
+
+    let isMatchRunning = false;
+    let matchTime = 120;
+    let timerInterval = null;
+    let stepsCount = 0;
+    let caloriesBurned = 0.0;
+    let matchScore = 0;
+    let heartRate = 75;
+
+    let inPenaltyRespawn = false;
+    let respawnProgress = 0;
+    const requiredRespawnJumps = 10;
+
+    // Sensor State
+    let sensorActive = false;
+    let lastAccel = 0;
+    let motionCooldown = false;
+
+    // Audio State
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.1) {
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function triggerVibrate(ms = 80) {
+      if (navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    /* REGISTRATION */
+    function openRegistrationModal() {
+      document.getElementById('registration-modal').classList.remove('hidden');
+    }
+
+    function handleRegistrationSubmit(e) {
+      e.preventDefault();
+      teamName = document.getElementById('reg-team-name').value.trim() || "Garuda";
+      playerName = document.getElementById('reg-player-name').value.trim() || "Siswa";
+      playerNo = document.getElementById('reg-player-no').value || "01";
+      activeArena = document.querySelector('input[name="game-choice"]:checked').value;
+
+      document.getElementById('header-team').innerText = `Tim: ${teamName}`;
+      document.getElementById('header-player').innerText = `${playerName} (#${playerNo})`;
+      document.getElementById('arena-title-tag').innerText = activeArena === 'gobak' ? 'GOBAK SODOR' : 'BENTENGAN';
+
+      document.getElementById('registration-modal').classList.add('hidden');
+      switchMode(activeArena);
+      playTone(580, 'sine', 0.2);
+    }
+
+    /* POCKET MOTION SENSOR */
+    async function enablePocketSensor() {
+      initAudio();
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        try {
+          const res = await DeviceMotionEvent.requestPermission();
+          if (res === 'granted') {
+            bindMotion();
+          } else {
+            showToast('Izin sensor gerak ditolak.');
+          }
+        } catch (err) {
+          bindMotion();
+        }
+      } else {
+        bindMotion();
+      }
+    }
+
+    function bindMotion() {
+      if (window.DeviceMotionEvent) {
+        window.addEventListener('devicemotion', onDeviceMotion, false);
+        sensorActive = true;
+        document.getElementById('sensor-dot').className = "w-2 h-2 rounded-full bg-emerald-400 animate-ping";
+        document.getElementById('sensor-status-txt').innerText = "Sensor Saku: AKTIF";
+        document.getElementById('btn-enable-sensor').innerText = "✓ SENSOR SAKU TERHUBUNG";
+        document.getElementById('btn-enable-sensor').classList.add('opacity-60', 'pointer-events-none');
+        playTone(660, 'triangle', 0.15);
+        triggerVibrate(150);
+      }
+    }
+
+    function onDeviceMotion(e) {
+      const acc = e.accelerationIncludingGravity || e.acceleration;
+      if (!acc || acc.x === null) return;
+      const mag = Math.sqrt((acc.x || 0)**2 + (acc.y || 0)**2 + (acc.z || 0)**2);
+      const delta = Math.abs(mag - lastAccel);
+      lastAccel = mag;
+
+      // Sensitivity threshold for pocket movement
+      if (delta > 3.0 && !motionCooldown && isMatchRunning) {
+        motionCooldown = true;
+        triggerPhysicalAction('pocket');
+        setTimeout(() => { motionCooldown = false; }, 300);
+      }
+    }
+
+    /* ARENA CANVAS & ENTITIES */
+    const canvas = document.getElementById('arenaCanvas');
+    const ctx = canvas.getContext('2d');
+    let cw = 0, ch = 0;
+    let player = { x: 30, y: 100, r: 12 };
+    let defenders = [];
+
+    function resizeCanvas() {
+      cw = canvas.parentElement.clientWidth;
+      ch = canvas.parentElement.clientHeight;
+      canvas.width = cw;
+      canvas.height = ch;
+      player.y = ch / 2;
+      initArenaDefenders();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function initArenaDefenders() {
+      defenders = [];
+      if (activeArena === 'gobak') {
+        const lines = 4;
+        const step = (cw - 80) / (lines + 1);
+        for (let i = 1; i <= lines; i++) {
+          defenders.push({
+            x: 40 + i * step,
+            y: Math.random() * (ch - 40) + 20,
+            vy: (i % 2 === 0 ? 1 : -1) * (1.5 + i * 0.2),
+            r: 10
+          });
+        }
+      } else {
+        // Bentengan patrollers
+        defenders = [
+          { x: cw * 0.55, y: ch * 0.3, vx: -1.2, vy: 1.0, r: 11 },
+          { x: cw * 0.75, y: ch * 0.7, vx: 1.0, vy: -1.2, r: 11 }
+        ];
+      }
+    }
+
+    function switchMode(mode) {
+      activeArena = mode;
+      const tg = document.getElementById('tab-gobak');
+      const tb = document.getElementById('tab-bentengan');
+      if (mode === 'gobak') {
+        tg.className = "p-2.5 rounded-xl border border-brand-500/60 bg-slate-900 text-brand-300 font-bold text-center";
+        tb.className = "p-2.5 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-400 font-bold text-center";
+        document.getElementById('arena-title-tag').innerText = 'GOBAK SODOR';
+      } else {
+        tb.className = "p-2.5 rounded-xl border border-brand-500/60 bg-slate-900 text-brand-300 font-bold text-center";
+        tg.className = "p-2.5 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-400 font-bold text-center";
+        document.getElementById('arena-title-tag').innerText = 'BENTENGAN';
+      }
+      resetMatch();
+    }
+
+    /* MATCH CONTROLS */
+    function startMatch() {
+      initAudio();
+      isMatchRunning = true;
+      inPenaltyRespawn = false;
+      respawnProgress = 0;
+      matchTime = 120;
+      document.getElementById('arena-overlay').classList.add('opacity-0', 'pointer-events-none');
+      document.getElementById('respawn-banner').classList.add('hidden');
+      playTone(520, 'sine', 0.2);
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (matchTime > 0) {
+          matchTime--;
+          const m = String(Math.floor(matchTime / 60)).padStart(2, '0');
+          const s = String(matchTime % 60).padStart(2, '0');
+          document.getElementById('match-timer').innerText = `${m}:${s}`;
+        } else {
+          endMatch();
+        }
+      }, 1000);
+    }
+
+    function resetMatch() {
+      isMatchRunning = false;
+      inPenaltyRespawn = false;
+      clearInterval(timerInterval);
+      matchTime = 120;
+      document.getElementById('match-timer').innerText = "02:00";
+      document.getElementById('arena-overlay').classList.remove('opacity-0', 'pointer-events-none');
+      document.getElementById('respawn-banner').classList.add('hidden');
+      player.x = 30;
+      player.y = ch / 2;
+      initArenaDefenders();
+    }
+
+    function endMatch() {
+      isMatchRunning = false;
+      clearInterval(timerInterval);
+      playTone(880, 'triangle', 0.4);
+      triggerVibrate([150, 100, 200]);
+      document.getElementById('overlay-title').innerText = "Waktu Match Habis! 🏆";
+      document.getElementById('overlay-desc').innerHTML = `Hebat! ${playerName} (${teamName}) menyumbang <strong>${matchScore} Poin</strong> dengan total <strong>${stepsCount} Langkah</strong>.`;
+      document.getElementById('arena-overlay').classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    /* PHYSICAL TRIGGER ACTION */
+    function triggerPhysicalAction(src) {
+      if (!isMatchRunning) return;
+      initAudio();
+
+      if (inPenaltyRespawn) {
+        respawnProgress++;
+        document.getElementById('respawn-count').innerText = respawnProgress;
+        playTone(450 + respawnProgress * 25, 'square', 0.08);
+        triggerVibrate(40);
+
+        if (respawnProgress >= requiredRespawnJumps) {
+          inPenaltyRespawn = false;
+          document.getElementById('respawn-banner').classList.add('hidden');
+          player.x = 30;
+          playTone(720, 'sine', 0.2);
+          triggerVibrate([80, 50, 120]);
+        }
+        return;
+      }
+
+      stepsCount++;
+      caloriesBurned += 0.32;
+      matchScore += 15;
+      heartRate = Math.min(182, heartRate + 1.1);
+
+      document.getElementById('stat-steps').innerText = stepsCount;
+      document.getElementById('stat-calorie').innerText = `${caloriesBurned.toFixed(1)} kcal`;
+      document.getElementById('stat-score').innerText = `${matchScore} pts`;
+      document.getElementById('stat-bpm').innerText = `${Math.round(heartRate)} BPM`;
+
+      triggerVibrate(30);
+
+      // Advance Player
+      if (activeArena === 'gobak') {
+        player.x += (cw - 60) / 10;
+        playTone(320 + player.x / 4, 'triangle', 0.06);
+
+        if (player.x >= cw - 35) {
+          matchScore += 200;
+          playTone(880, 'sine', 0.3);
+          triggerVibrate([100, 50, 150]);
+          player.x = 30;
+        }
+      } else {
+        player.x += (cw - 80) / 12;
+        playTone(360, 'sine', 0.06);
+
+        if (player.x >= cw - 60) {
+          matchScore += 250;
+          playTone(920, 'sine', 0.35);
+          triggerVibrate([100, 50, 200]);
+          player.x = 30;
+        }
+      }
+    }
+
+    /* RENDER LOOP */
+    function render() {
+      ctx.clearRect(0, 0, cw, ch);
+
+      if (activeArena === 'gobak') {
+        // Boundaries
+        ctx.strokeStyle = "rgba(56, 189, 248, 0.25)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(20, 15, cw - 40, ch - 30);
+
+        // Center line
+        ctx.beginPath();
+        ctx.moveTo(20, ch / 2);
+        ctx.lineTo(cw - 20, ch / 2);
+        ctx.stroke();
+
+        defenders.forEach(d => {
+          ctx.strokeStyle = "rgba(244, 63, 94, 0.35)";
+          ctx.beginPath();
+          ctx.moveTo(d.x, 15);
+          ctx.lineTo(d.x, ch - 15);
+          ctx.stroke();
+
+          if (isMatchRunning && !inPenaltyRespawn) {
+            d.y += d.vy;
+            if (d.y < 25 || d.y > ch - 25) d.vy *= -1;
+
+            if (Math.hypot(player.x - d.x, player.y - d.y) < player.r + d.r) {
+              triggerTagged();
+            }
+          }
+
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+          ctx.fillStyle = "#f43f5e";
+          ctx.fill();
+        });
+
+      } else {
+        // Bentengan zones
+        ctx.strokeStyle = "#38bdf8";
+        ctx.strokeRect(15, ch / 2 - 30, 35, 60);
+        ctx.strokeStyle = "#f43f5e";
+        ctx.strokeRect(cw - 50, ch / 2 - 30, 35, 60);
+
+        defenders.forEach(d => {
+          if (isMatchRunning && !inPenaltyRespawn) {
+            d.x += d.vx;
+            d.y += d.vy;
+            if (d.x < cw * 0.35 || d.x > cw - 60) d.vx *= -1;
+            if (d.y < 25 || d.y > ch - 25) d.vy *= -1;
+
+            if (Math.hypot(player.x - d.x, player.y - d.y) < player.r + d.r) {
+              triggerTagged();
+            }
+          }
+
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+          ctx.fillStyle = "#f97316";
+          ctx.fill();
+        });
+      }
+
+      // Draw Player
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
+      ctx.fillStyle = inPenaltyRespawn ? "#94a3b8" : "#38bdf8";
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      requestAnimationFrame(render);
+    }
+
+    function triggerTagged() {
+      if (inPenaltyRespawn) return;
+      inPenaltyRespawn = true;
+      respawnProgress = 0;
+      document.getElementById('respawn-count').innerText = "0";
+      document.getElementById('respawn-banner').classList.remove('hidden');
+      playTone(200, 'sawtooth', 0.25);
+      triggerVibrate([150, 80, 150]);
+    }
+
+    /* RAPOR & PDF PRINT */
+    function openReportModal() {
+      document.getElementById('pdf-player-name').innerText = playerName;
+      document.getElementById('pdf-player-no').innerText = playerNo;
+      document.getElementById('pdf-team-name').innerText = teamName;
+      document.getElementById('pdf-arena').innerText = activeArena === 'gobak' ? "Gobak Sodor" : "Bentengan";
+
+      document.getElementById('pdf-steps').innerText = stepsCount;
+      document.getElementById('pdf-cals').innerText = `${caloriesBurned.toFixed(1)} kcal`;
+      document.getElementById('pdf-score').innerText = `${matchScore} pts`;
+      document.getElementById('pdf-bpm').innerText = `${Math.round(heartRate)} BPM`;
+      document.getElementById('pdf-sign-student').innerText = `( ${playerName} )`;
+
+      document.getElementById('report-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeReportModal() {
+      document.getElementById('report-modal').classList.add('hidden');
+    }
+
+    function printStudentReport() {
+      window.print();
+    }
+
+    /* INIT ON LOAD */
+    window.onload = function() {
+      resizeCanvas();
+      lucide.createIcons();
+      render();
+    };
+  </script>
+</body>
+</html>
