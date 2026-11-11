@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>MAIN-AKSA: 5 vs 5 MOBA Arena (WebRTC PeerJS Edition)</title>
+  <title>MAIN-AKSA: 5 vs 5 MOBA Arena (Auto-Reconnect Edition)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
-  <!-- PeerJS WebRTC Library (CDN Publik Gratis, Tanpa Setup Akun) -->
+  <!-- PeerJS WebRTC Library -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <style>
@@ -53,10 +53,15 @@
       </div>
       <div>
         <h1 class="text-sm font-extrabold tracking-tight leading-none text-white">MAIN-AKSA 5v5</h1>
-        <p class="text-[10px] text-slate-400 font-medium">WebRTC P2P Direct Arena</p>
+        <p class="text-[10px] text-slate-400 font-medium">Sensor Vektor 4-Arah & Auto-Reconnect</p>
       </div>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1.5">
+      <!-- Status Indikator Jaringan P2P -->
+      <span id="conn-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1">
+        <span id="conn-dot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+        <span id="conn-text">Standby</span>
+      </span>
       <span id="room-badge" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-amber-400 border border-slate-700">
         PIN: ----
       </span>
@@ -111,7 +116,7 @@
             </div>
           </div>
 
-          <!-- Posisi Saku Celana -->
+          <!-- Posisi Saku Celana (Kompensasi Sumbu Vektor) -->
           <div>
             <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Posisi Saku HP di Celana</label>
             <div class="grid grid-cols-2 gap-2">
@@ -221,11 +226,11 @@
         </div>
       </div>
 
-      <!-- Banner Sensor Saku -->
+      <!-- Banner Sensor Saku Vektor 4-Arah -->
       <div id="sensor-banner" class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
-          <span class="text-xs text-amber-200 font-semibold" id="sensor-status-text">Sensor Saku 4-Arah: AKTIF</span>
+          <span class="text-xs text-amber-200 font-semibold" id="sensor-status-text">Sensor Vektor 4-Arah: AKTIF</span>
         </div>
         <button onclick="requestMotionSensor()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-black px-2.5 py-1.5 rounded-lg touch-btn shadow">
           Aktifkan Ulang
@@ -332,12 +337,13 @@
 
   </main>
 
-  <!-- ==================== JAVASCRIPT & WEBRTC PEERJS ==================== -->
+  <!-- ==================== LOGIKA JAVASCRIPT & WEBRTC ==================== -->
   <script>
     // --- 1. STATE UTAMA ---
     let currentPin = '';
-    let currentRoleType = 'player'; // 'player' atau 'referee'
-    let currentGame = 'gobak'; // 'gobak' atau 'bentengan'
+    let currentRoleType = 'player';
+    let currentGame = 'gobak';
+    let currentGameState = 'waiting'; // 'waiting', 'playing', 'finished'
     let team = 'A';
     let role = 'atk_1';
     let playerName = '';
@@ -353,14 +359,14 @@
     let wakeLockSentinel = null;
 
     let localPlayerPos = { x: 190, y: 380 };
-    let roomPlayers = {}; // Menyimpan data posisi 10 pemain
+    let roomPlayers = {};
 
-    // WebRTC PeerJS References
+    // WebRTC PeerJS References & Auto-Reconnect
     let peer = null;
-    let refereeConn = null; // Koneksi siswa ke wasit
-    let clientConnections = []; // Daftar koneksi siswa yang dipegang wasit
-
-    // Prefix Peer ID unik agar PIN 4 digit tidak bentrok global
+    let refereeConn = null;
+    let clientConnections = [];
+    let reconnectTimer = null;
+    let isReconnecting = false;
     const PEER_PREFIX = 'mainaksa-room-';
 
     // --- 2. SCREEN WAKE LOCK API ---
@@ -384,7 +390,16 @@
       }
     });
 
-    // --- 3. NAVIGASI LOBI & SELEKSI PERAN ---
+    // --- 3. UI LOBI & PERAN ---
+    function updateConnBadge(status, colorClass, dotColor) {
+      const badge = document.getElementById('conn-status-badge');
+      const text = document.getElementById('conn-text');
+      const dot = document.getElementById('conn-dot');
+      text.innerText = status;
+      badge.className = `px-2 py-0.5 rounded text-[10px] font-bold ${colorClass} border border-slate-700 flex items-center gap-1`;
+      dot.className = `w-1.5 h-1.5 rounded-full ${dotColor}`;
+    }
+
     function switchLobbyTab(tab) {
       currentRoleType = tab;
       const tabP = document.getElementById('tab-btn-player');
@@ -457,9 +472,9 @@
       }
     }
 
-    // --- 4. WEBRTC PEERJS MULTIPLAYER LOGIC ---
+    // --- 4. WEBRTC MULTIPLAYER DENGAN AUTO-RECONNECT ---
 
-    // A. Guru Membuat Room (Host / Server Peer)
+    // A. Guru Membuat Room (Host Wasit)
     function createRoomAsReferee() {
       currentPin = Math.floor(1000 + Math.random() * 9000).toString();
       currentRoleType = 'referee';
@@ -468,14 +483,12 @@
       document.getElementById('hud-player-title').innerText = `Layar Wasit Proyektor - Room ${currentPin}`;
       document.getElementById('referee-controls-panel').classList.remove('hidden');
 
-      // Buka PeerJS dengan ID PIN Room
       peer = new Peer(PEER_PREFIX + currentPin);
 
       peer.on('open', (id) => {
-        console.log('Room WebRTC Wasit Terbuka. ID:', id);
+        updateConnBadge('Online (Wasit)', 'bg-emerald-950 text-emerald-400', 'bg-emerald-400');
       });
 
-      // Menerima koneksi masuk dari 10 HP siswa
       peer.on('connection', (conn) => {
         clientConnections.push(conn);
 
@@ -484,9 +497,12 @@
         });
 
         conn.on('close', () => {
-          // Bersihkan pemain yang disconnect
           clientConnections = clientConnections.filter(c => c !== conn);
         });
+      });
+
+      peer.on('error', (err) => {
+        console.error('Peer Error Wasit:', err);
       });
 
       document.getElementById('view-lobby').classList.add('hidden');
@@ -495,7 +511,7 @@
       renderArena();
     }
 
-    // B. Siswa Menghubungkan ke PIN Wasit (Client Peer)
+    // B. Siswa Bergabung ke Room
     function joinRoomAsPlayer() {
       currentPin = document.getElementById('input-pin').value.trim();
       playerName = document.getElementById('player-name').value.trim() || 'Siswa';
@@ -512,64 +528,112 @@
       document.getElementById('waiting-pin').innerText = currentPin;
       document.getElementById('waiting-player-name').innerText = playerName;
 
-      // Inisialisasi posisi awal avatar siswa
       localPlayerPos = (team === 'A') ? { x: 70 + Math.random() * 240, y: 380 } : { x: 190, y: 120 + Math.random() * 180 };
 
-      // Inisialisasi Peer Siswa dengan ID acak
-      peer = new Peer();
+      initStudentPeerConnection();
 
-      peer.on('open', () => {
-        // Hubungkan langsung ke laptop wasit via PIN
-        refereeConn = peer.connect(PEER_PREFIX + currentPin);
-
-        refereeConn.on('open', () => {
-          console.log('Terhubung langsung ke Wasit via WebRTC DataChannel');
-          // Kirim data registrasi pemain
-          refereeConn.send({
-            type: 'register',
-            playerKey: `${team}_${role}`,
-            playerData: {
-              name: playerName,
-              team: team,
-              role: role,
-              x: localPlayerPos.x,
-              y: localPlayerPos.y,
-              steps: 0,
-              inRespawn: false
-            }
-          });
-        });
-
-        refereeConn.on('data', (data) => {
-          handleIncomingPeerData(data);
-        });
-
-        refereeConn.on('error', (err) => {
-          alert('Gagal tersambung ke Room Wasit. Periksa kembali PIN Anda.');
-        });
-      });
-
-      // Tampilkan ruang tunggu
       document.getElementById('view-lobby').classList.add('hidden');
       document.getElementById('view-waiting').classList.remove('hidden');
       initAudio();
     }
 
-    // C. Penanganan Data Masuk (Wasit & Siswa)
+    // Inisialisasi & Logika Auto-Reconnect
+    function initStudentPeerConnection() {
+      if (peer && !peer.destroyed) {
+        peer.destroy();
+      }
+
+      peer = new Peer();
+
+      peer.on('open', () => {
+        connectToReferee();
+      });
+
+      peer.on('error', (err) => {
+        console.warn('Peer error, menjadwalkan auto-reconnect...', err);
+        triggerAutoReconnect();
+      });
+
+      peer.on('disconnected', () => {
+        triggerAutoReconnect();
+      });
+    }
+
+    function connectToReferee() {
+      if (!peer || peer.destroyed) return;
+
+      updateConnBadge('Menyambung...', 'bg-amber-950 text-amber-400', 'bg-amber-400 animate-ping');
+
+      refereeConn = peer.connect(PEER_PREFIX + currentPin, {
+        reliable: true
+      });
+
+      refereeConn.on('open', () => {
+        isReconnecting = false;
+        clearInterval(reconnectTimer);
+        reconnectTimer = null;
+        updateConnBadge('Terhubung', 'bg-emerald-950 text-emerald-400', 'bg-emerald-400');
+
+        // Kirim status registrasi atau pulihkan data langkah & posisi jika usai disconnect
+        refereeConn.send({
+          type: 'register',
+          playerKey: `${team}_${role}`,
+          playerData: {
+            name: playerName,
+            team: team,
+            role: role,
+            x: localPlayerPos.x,
+            y: localPlayerPos.y,
+            steps: totalSteps,
+            inRespawn: inRespawn
+          }
+        });
+      });
+
+      refereeConn.on('data', (data) => {
+        handleIncomingPeerData(data);
+      });
+
+      refereeConn.on('close', () => {
+        triggerAutoReconnect();
+      });
+
+      refereeConn.on('error', () => {
+        triggerAutoReconnect();
+      });
+    }
+
+    function triggerAutoReconnect() {
+      if (currentRoleType !== 'player' || currentGameState === 'finished') return;
+      if (isReconnecting) return;
+
+      isReconnecting = true;
+      updateConnBadge('Reconnecting...', 'bg-red-950 text-red-400', 'bg-red-500 animate-pulse');
+
+      if (!reconnectTimer) {
+        reconnectTimer = setInterval(() => {
+          console.log('Mencoba menyambungkan kembali ke Room Wasit...');
+          connectToReferee();
+        }, 2000); // Percobaan sambung ulang otomatis setiap 2 detik
+      }
+    }
+
+    // C. Penanganan Data Masuk
     function handleIncomingPeerData(data, senderConn) {
-      // 1. Pesan Registrasi Pemain Baru (Diterima Wasit)
+      // Registrasi Pemain (Diterima Wasit)
       if (data.type === 'register' && currentRoleType === 'referee') {
         roomPlayers[data.playerKey] = data.playerData;
         broadcastToAllClients({
           type: 'sync_state',
           roomPlayers: roomPlayers,
           teamScoreA: teamScoreA,
-          teamScoreB: teamScoreB
+          teamScoreB: teamScoreB,
+          gameState: currentGameState
         });
         renderArena();
       }
 
-      // 2. Pembaruan Posisi/Langkah dari HP Siswa (Diterima Wasit)
+      // Pembaruan Posisi/Langkah Siswa (Diterima Wasit)
       if (data.type === 'player_update' && currentRoleType === 'referee') {
         if (roomPlayers[data.playerKey]) {
           roomPlayers[data.playerKey].x = data.x;
@@ -580,27 +644,38 @@
         if (data.scoreBonusA) teamScoreA += data.scoreBonusA;
         if (data.scoreBonusB) teamScoreB += data.scoreBonusB;
 
-        // Sebar ulang posisi ke seluruh layar siswa & proyektor
         broadcastToAllClients({
           type: 'sync_state',
           roomPlayers: roomPlayers,
           teamScoreA: teamScoreA,
-          teamScoreB: teamScoreB
+          teamScoreB: teamScoreB,
+          gameState: currentGameState
         });
         renderArena();
       }
 
-      // 3. Sinkronisasi Data dari Wasit (Diterima Siswa)
+      // Sinkronisasi Data (Diterima Siswa)
       if (data.type === 'sync_state' && currentRoleType === 'player') {
         roomPlayers = data.roomPlayers;
         teamScoreA = data.teamScoreA;
         teamScoreB = data.teamScoreB;
         document.getElementById('team-score').innerText = (team === 'A') ? teamScoreA : teamScoreB;
+
+        // Jika HP baru saja auto-reconnect dan wasit sudah dalam status bermain
+        if (data.gameState === 'playing' && currentGameState !== 'playing') {
+          currentGameState = 'playing';
+          document.getElementById('view-waiting').classList.add('hidden');
+          document.getElementById('view-gameplay').classList.remove('hidden');
+          activateWakeLock();
+          bindSensorListener();
+        }
+
         renderArena();
       }
 
-      // 4. Perintah Mulai Pertandingan (Diterima Siswa)
+      // Perintah Mulai (Diterima Siswa)
       if (data.type === 'cmd_start' && currentRoleType === 'player') {
+        currentGameState = 'playing';
         document.getElementById('view-waiting').classList.add('hidden');
         document.getElementById('view-gameplay').classList.remove('hidden');
         activateWakeLock();
@@ -608,21 +683,21 @@
         playWhistle();
       }
 
-      // 5. Perintah Selesai Pertandingan (Diterima Siswa)
+      // Perintah Selesai (Diterima Siswa)
       if (data.type === 'cmd_finish') {
+        currentGameState = 'finished';
         finishMatch();
       }
     }
 
-    // Helper Wasit memancarkan data ke seluruh HP siswa
     function broadcastToAllClients(msg) {
       clientConnections.forEach(conn => {
         if (conn.open) conn.send(msg);
       });
     }
 
-    // D. Kendali Wasit Memancarkan State Mulai & Selesai
     function refereeBroadcastState(stateCmd) {
+      currentGameState = stateCmd;
       if (stateCmd === 'playing') {
         playWhistle();
         broadcastToAllClients({ type: 'cmd_start' });
@@ -632,7 +707,7 @@
       }
     }
 
-    // --- 5. SENSOR SAKU VEKTOR 4-ARAH ---
+    // --- 5. SENSOR VEKTOR 4-ARAH (BERFUNGSI PENUH) ---
     function requestMotionSensor() {
       activateWakeLock();
       if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -657,14 +732,18 @@
         const delta = Math.abs(magnitude - lastSensorAcc);
         lastSensorAcc = magnitude;
 
+        // Ambang hentakan langkah saku
         if (delta > 3.8) {
           let detectedDir = 'forward';
+
+          // Kompensasi posisi saku celana kanan vs kiri
           const adjustedX = (pocketSide === 'right') ? rawX : -rawX;
           const adjustedY = rawY;
 
           const absX = Math.abs(adjustedX);
           const absY = Math.abs(adjustedY);
 
+          // Evaluasi arah dominan gerakan paha/pinggul
           if (absX > absY && absX > 1.4) {
             detectedDir = (adjustedX > 0) ? 'right' : 'left';
           } else if (absY >= absX && absY > 1.4) {
@@ -674,7 +753,7 @@
           processPhysicalStep(detectedDir);
         }
       });
-      document.getElementById('sensor-status-text').innerText = 'Sensor Saku 4-Arah: AKTIF';
+      document.getElementById('sensor-status-text').innerText = 'Sensor Vektor 4-Arah: AKTIF';
     }
 
     function processPhysicalStep(direction) {
@@ -697,6 +776,7 @@
       const stepDist = 8;
       const badge = document.getElementById('hud-heading-info');
 
+      // Translasi koordinat avatar berdasarkan deteksi arah vektor
       if (direction === 'forward') {
         localPlayerPos.y = Math.max(40, localPlayerPos.y - stepDist);
         badge.innerText = 'Gerak: MAJU ▲';
@@ -720,7 +800,6 @@
       }
 
       let bonusScore = 0;
-      // Gobak Sodor: Tembus garis belakang
       if (currentGame === 'gobak' && team === 'A' && localPlayerPos.y <= 50) {
         localPlayerPos.y = 380;
         bonusScore = 100;
@@ -795,7 +874,6 @@
         ctx.fill();
       }
 
-      // Gambarkan 10 avatar pemain
       Object.keys(roomPlayers).forEach(pKey => {
         const p = roomPlayers[pKey];
         const isSelf = (currentRoleType === 'player' && pKey === `${team}_${role}`);
@@ -842,6 +920,8 @@
     // --- 8. RAPOR EVALUASI & PDF ---
     function finishMatch() {
       releaseWakeLock();
+      clearInterval(reconnectTimer);
+      reconnectTimer = null;
 
       document.getElementById('view-waiting').classList.add('hidden');
       document.getElementById('view-gameplay').classList.add('hidden');
@@ -866,6 +946,8 @@
 
     function resetToLobby() {
       releaseWakeLock();
+      clearInterval(reconnectTimer);
+      reconnectTimer = null;
       if (peer) {
         peer.destroy();
         peer = null;
@@ -878,6 +960,8 @@
       teamScoreA = 0;
       teamScoreB = 0;
       roomPlayers = {};
+      currentGameState = 'waiting';
+      updateConnBadge('Standby', 'bg-slate-800 text-slate-400', 'bg-slate-500');
     }
 
     updateRoleDropdown();
