@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>MAIN-AKSA: 5 vs 5 MOBA Arena (Auto-Reconnect Edition)</title>
+  <title>MAIN-AKSA: 5 vs 5 MOBA Arena (Pocket Lock Edition)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
@@ -53,11 +53,10 @@
       </div>
       <div>
         <h1 class="text-sm font-extrabold tracking-tight leading-none text-white">MAIN-AKSA 5v5</h1>
-        <p class="text-[10px] text-slate-400 font-medium">Sensor Vektor 4-Arah & Auto-Reconnect</p>
+        <p class="text-[10px] text-slate-400 font-medium">Kinestetik & Mode Kunci Saku</p>
       </div>
     </div>
     <div class="flex items-center gap-1.5">
-      <!-- Status Indikator Jaringan P2P -->
       <span id="conn-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1">
         <span id="conn-dot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
         <span id="conn-text">Standby</span>
@@ -71,14 +70,14 @@
     </div>
   </header>
 
-  <!-- ==================== MAIN CONTENT ==================== -->
-  <main class="flex-1 w-full max-w-md mx-auto p-3 flex flex-col justify-start">
+  <!-- ==================== MAIN CONTAINER ==================== -->
+  <main class="flex-1 w-full max-w-md mx-auto p-3 flex flex-col justify-start relative">
 
     <!-- ----------------- SECTION 1: LOBBY & SETUP ----------------- -->
     <div id="view-lobby" class="space-y-4">
       <div class="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-xl">
         
-        <!-- Tab Mode: Siswa vs Guru -->
+        <!-- Tab Mode: Siswa vs Wasit -->
         <div class="grid grid-cols-2 gap-2 mb-4 bg-slate-950 p-1 rounded-xl border border-slate-800">
           <button type="button" onclick="switchLobbyTab('player')" id="tab-btn-player" class="bg-amber-500 text-slate-950 font-black py-2 rounded-lg text-xs transition-all shadow">
             Siswa (Pemain)
@@ -116,7 +115,7 @@
             </div>
           </div>
 
-          <!-- Posisi Saku Celana (Kompensasi Sumbu Vektor) -->
+          <!-- Posisi Saku Celana -->
           <div>
             <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Posisi Saku HP di Celana</label>
             <div class="grid grid-cols-2 gap-2">
@@ -180,7 +179,7 @@
         <p class="text-xs text-slate-400 mt-1">Nama: <span id="waiting-player-name" class="font-bold text-slate-200">-</span></p>
         <div class="my-4 py-3 px-4 rounded-xl bg-slate-950 border border-slate-800">
           <p class="text-xs text-amber-300 font-semibold animate-bounce">Menunggu Wasit Menekan Mulai...</p>
-          <p class="text-[10px] text-slate-500 mt-1">Layar akan otomatis terbuka dan sensor saku mulai merekam begitu wasit meniup peluit dari laptop.</p>
+          <p class="text-[10px] text-slate-500 mt-1">Layar akan terbuka otomatis begitu wasit meniup peluit dari laptop.</p>
         </div>
       </div>
     </div>
@@ -213,7 +212,7 @@
         <canvas id="game-canvas" width="380" height="420" class="w-full h-auto block"></canvas>
 
         <!-- Overlay Respawn Fisik -->
-        <div id="respawn-overlay" class="hidden absolute inset-0 bg-red-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
+        <div id="respawn-overlay" class="hidden absolute inset-0 bg-red-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center z-10">
           <div class="w-12 h-12 rounded-full bg-red-600/30 border-2 border-red-500 flex items-center justify-center text-red-300 font-black text-lg mb-2 animate-pulse">
             !
           </div>
@@ -226,14 +225,13 @@
         </div>
       </div>
 
-      <!-- Banner Sensor Saku Vektor 4-Arah -->
-      <div id="sensor-banner" class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
-          <span class="text-xs text-amber-200 font-semibold" id="sensor-status-text">Sensor Vektor 4-Arah: AKTIF</span>
-        </div>
-        <button onclick="requestMotionSensor()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-black px-2.5 py-1.5 rounded-lg touch-btn shadow">
-          Aktifkan Ulang
+      <!-- Tombol Mode Kunci Saku & Sensor Banner -->
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="enablePocketLock()" class="bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white font-extrabold text-xs py-2.5 px-3 rounded-xl shadow-lg border border-purple-500/30 touch-btn flex items-center justify-center gap-1.5">
+          <span>🔒 KUNCI LAYAR SAKU</span>
+        </button>
+        <button onclick="requestMotionSensor()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300 text-[11px] font-bold py-2.5 px-2 rounded-xl touch-btn truncate">
+          🔄 Kalibrasi Sensor
         </button>
       </div>
 
@@ -337,13 +335,38 @@
 
   </main>
 
+  <!-- ==================== OVERLAY MODE KUNCI SAKU (LAYAR HITAM) ==================== -->
+  <div id="pocket-lock-overlay" class="hidden fixed inset-0 bg-black z-50 flex flex-col justify-between items-center p-6 text-center select-none" style="touch-action: none;">
+    <!-- Bagian Atas: Keterangan Ringkas -->
+    <div class="pt-8">
+      <span class="inline-block w-3 h-3 rounded-full bg-emerald-500 animate-ping mb-2"></span>
+      <h2 class="text-xs font-bold text-slate-600 tracking-wider uppercase">MODE SAKU AKTIF</h2>
+      <p class="text-[10px] text-slate-700">Layar terlindungi dari sentuhan paha. Sensor gerak tetap merekam penuh.</p>
+    </div>
+
+    <!-- Bagian Tengah: HUD Minimalis Samar -->
+    <div class="space-y-3">
+      <div class="text-4xl font-black text-slate-800 tracking-tighter" id="pocket-lock-steps">
+        0
+      </div>
+      <p class="text-[10px] text-slate-700 font-semibold tracking-widest uppercase">LANGKAH TEREKAM</p>
+    </div>
+
+    <!-- Bagian Bawah: Buka Kunci (Tekan Dua Kali / Double-Tap) -->
+    <div class="pb-10 w-full max-w-xs">
+      <button id="btn-unlock-pocket" onclick="handlePocketUnlockClick()" class="w-full bg-slate-900 border border-slate-800 text-slate-500 font-bold text-xs py-3.5 rounded-2xl touch-btn active:bg-slate-800 active:text-slate-300">
+        Ketuk 2x Cepat untuk Membuka
+      </button>
+    </div>
+  </div>
+
   <!-- ==================== LOGIKA JAVASCRIPT & WEBRTC ==================== -->
   <script>
     // --- 1. STATE UTAMA ---
     let currentPin = '';
     let currentRoleType = 'player';
     let currentGame = 'gobak';
-    let currentGameState = 'waiting'; // 'waiting', 'playing', 'finished'
+    let currentGameState = 'waiting';
     let team = 'A';
     let role = 'atk_1';
     let playerName = '';
@@ -369,6 +392,11 @@
     let isReconnecting = false;
     const PEER_PREFIX = 'mainaksa-room-';
 
+    // State Debounce Sensor & Mode Kunci Saku
+    let lastStepTime = 0;
+    let unlockTapCount = 0;
+    let unlockTapTimer = null;
+
     // --- 2. SCREEN WAKE LOCK API ---
     async function activateWakeLock() {
       if ('wakeLock' in navigator) {
@@ -390,7 +418,37 @@
       }
     });
 
-    // --- 3. UI LOBI & PERAN ---
+    // --- 3. FITUR MODE KUNCI SAKU (LAYAR GELAP ANTI-SENTUH) ---
+    function enablePocketLock() {
+      const overlay = document.getElementById('pocket-lock-overlay');
+      overlay.classList.remove('hidden');
+      document.getElementById('pocket-lock-steps').innerText = totalSteps;
+      activateWakeLock();
+    }
+
+    function handlePocketUnlockClick() {
+      unlockTapCount++;
+      const btn = document.getElementById('btn-unlock-pocket');
+
+      if (unlockTapCount === 1) {
+        btn.innerText = 'Ketuk 1x Lagi untuk Membuka!';
+        btn.className = 'w-full bg-slate-800 border border-amber-500/50 text-amber-400 font-black text-xs py-3.5 rounded-2xl touch-btn';
+        unlockTapTimer = setTimeout(() => {
+          unlockTapCount = 0;
+          btn.innerText = 'Ketuk 2x Cepat untuk Membuka';
+          btn.className = 'w-full bg-slate-900 border border-slate-800 text-slate-500 font-bold text-xs py-3.5 rounded-2xl touch-btn';
+        }, 1200);
+      } else if (unlockTapCount >= 2) {
+        clearTimeout(unlockTapTimer);
+        unlockTapCount = 0;
+        document.getElementById('pocket-lock-overlay').classList.add('hidden');
+        btn.innerText = 'Ketuk 2x Cepat untuk Membuka';
+        btn.className = 'w-full bg-slate-900 border border-slate-800 text-slate-500 font-bold text-xs py-3.5 rounded-2xl touch-btn';
+        playBeep(700);
+      }
+    }
+
+    // --- 4. UI LOBI & PERAN ---
     function updateConnBadge(status, colorClass, dotColor) {
       const badge = document.getElementById('conn-status-badge');
       const text = document.getElementById('conn-text');
@@ -472,9 +530,8 @@
       }
     }
 
-    // --- 4. WEBRTC MULTIPLAYER DENGAN AUTO-RECONNECT ---
+    // --- 5. WEBRTC MULTIPLAYER DENGAN AUTO-RECONNECT ---
 
-    // A. Guru Membuat Room (Host Wasit)
     function createRoomAsReferee() {
       currentPin = Math.floor(1000 + Math.random() * 9000).toString();
       currentRoleType = 'referee';
@@ -511,7 +568,6 @@
       renderArena();
     }
 
-    // B. Siswa Bergabung ke Room
     function joinRoomAsPlayer() {
       currentPin = document.getElementById('input-pin').value.trim();
       playerName = document.getElementById('player-name').value.trim() || 'Siswa';
@@ -537,7 +593,6 @@
       initAudio();
     }
 
-    // Inisialisasi & Logika Auto-Reconnect
     function initStudentPeerConnection() {
       if (peer && !peer.destroyed) {
         peer.destroy();
@@ -550,7 +605,6 @@
       });
 
       peer.on('error', (err) => {
-        console.warn('Peer error, menjadwalkan auto-reconnect...', err);
         triggerAutoReconnect();
       });
 
@@ -574,7 +628,6 @@
         reconnectTimer = null;
         updateConnBadge('Terhubung', 'bg-emerald-950 text-emerald-400', 'bg-emerald-400');
 
-        // Kirim status registrasi atau pulihkan data langkah & posisi jika usai disconnect
         refereeConn.send({
           type: 'register',
           playerKey: `${team}_${role}`,
@@ -612,15 +665,12 @@
 
       if (!reconnectTimer) {
         reconnectTimer = setInterval(() => {
-          console.log('Mencoba menyambungkan kembali ke Room Wasit...');
           connectToReferee();
-        }, 2000); // Percobaan sambung ulang otomatis setiap 2 detik
+        }, 2000);
       }
     }
 
-    // C. Penanganan Data Masuk
     function handleIncomingPeerData(data, senderConn) {
-      // Registrasi Pemain (Diterima Wasit)
       if (data.type === 'register' && currentRoleType === 'referee') {
         roomPlayers[data.playerKey] = data.playerData;
         broadcastToAllClients({
@@ -633,7 +683,6 @@
         renderArena();
       }
 
-      // Pembaruan Posisi/Langkah Siswa (Diterima Wasit)
       if (data.type === 'player_update' && currentRoleType === 'referee') {
         if (roomPlayers[data.playerKey]) {
           roomPlayers[data.playerKey].x = data.x;
@@ -654,14 +703,12 @@
         renderArena();
       }
 
-      // Sinkronisasi Data (Diterima Siswa)
       if (data.type === 'sync_state' && currentRoleType === 'player') {
         roomPlayers = data.roomPlayers;
         teamScoreA = data.teamScoreA;
         teamScoreB = data.teamScoreB;
         document.getElementById('team-score').innerText = (team === 'A') ? teamScoreA : teamScoreB;
 
-        // Jika HP baru saja auto-reconnect dan wasit sudah dalam status bermain
         if (data.gameState === 'playing' && currentGameState !== 'playing') {
           currentGameState = 'playing';
           document.getElementById('view-waiting').classList.add('hidden');
@@ -673,7 +720,6 @@
         renderArena();
       }
 
-      // Perintah Mulai (Diterima Siswa)
       if (data.type === 'cmd_start' && currentRoleType === 'player') {
         currentGameState = 'playing';
         document.getElementById('view-waiting').classList.add('hidden');
@@ -683,9 +729,9 @@
         playWhistle();
       }
 
-      // Perintah Selesai (Diterima Siswa)
       if (data.type === 'cmd_finish') {
         currentGameState = 'finished';
+        document.getElementById('pocket-lock-overlay').classList.add('hidden');
         finishMatch();
       }
     }
@@ -707,7 +753,7 @@
       }
     }
 
-    // --- 5. SENSOR VEKTOR 4-ARAH (BERFUNGSI PENUH) ---
+    // --- 6. SENSOR SAKU VEKTOR SENSITIF (GRAVITATIONAL FILTER + DEBOUNCE) ---
     function requestMotionSensor() {
       activateWakeLock();
       if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -721,39 +767,41 @@
 
     function bindSensorListener() {
       window.addEventListener('devicemotion', (event) => {
-        const acc = event.acceleration || event.accelerationIncludingGravity;
-        if (!acc) return;
+        // Menggunakan accelerationIncludingGravity untuk dukungan penuh Android & iOS
+        const acc = event.accelerationIncludingGravity;
+        if (!acc || acc.x === null || acc.y === null || acc.z === null) return;
 
-        const rawX = acc.x || 0;
-        const rawY = acc.y || 0;
-        const rawZ = acc.z || 0;
+        const rawX = acc.x;
+        const rawY = acc.y;
+        const rawZ = acc.z;
 
+        // Vektor resultan
         const magnitude = Math.sqrt(rawX * rawX + rawY * rawY + rawZ * rawZ);
-        const delta = Math.abs(magnitude - lastSensorAcc);
-        lastSensorAcc = magnitude;
+        // Menghilangkan gravitasi statis (~9.8 m/s^2)
+        const dynamicAcc = Math.abs(magnitude - 9.8);
+        const now = Date.now();
 
-        // Ambang hentakan langkah saku
-        if (delta > 3.8) {
+        // Ambang batas dinamis 1.8 + jeda pendinginan langkah 280ms
+        if (dynamicAcc > 1.8 && (now - lastStepTime > 280)) {
+          lastStepTime = now;
+
           let detectedDir = 'forward';
-
-          // Kompensasi posisi saku celana kanan vs kiri
           const adjustedX = (pocketSide === 'right') ? rawX : -rawX;
           const adjustedY = rawY;
 
           const absX = Math.abs(adjustedX);
           const absY = Math.abs(adjustedY);
 
-          // Evaluasi arah dominan gerakan paha/pinggul
-          if (absX > absY && absX > 1.4) {
+          // Evaluasi arah langkah
+          if (absX > 2.2 && absX > absY * 0.7) {
             detectedDir = (adjustedX > 0) ? 'right' : 'left';
-          } else if (absY >= absX && absY > 1.4) {
-            detectedDir = (adjustedY < -1.5) ? 'backward' : 'forward';
+          } else {
+            detectedDir = (adjustedY > 9.5) ? 'forward' : 'backward';
           }
 
           processPhysicalStep(detectedDir);
         }
       });
-      document.getElementById('sensor-status-text').innerText = 'Sensor Vektor 4-Arah: AKTIF';
     }
 
     function processPhysicalStep(direction) {
@@ -772,11 +820,11 @@
 
       totalSteps++;
       document.getElementById('hud-steps').innerText = totalSteps;
+      document.getElementById('pocket-lock-steps').innerText = totalSteps;
 
       const stepDist = 8;
       const badge = document.getElementById('hud-heading-info');
 
-      // Translasi koordinat avatar berdasarkan deteksi arah vektor
       if (direction === 'forward') {
         localPlayerPos.y = Math.max(40, localPlayerPos.y - stepDist);
         badge.innerText = 'Gerak: MAJU ▲';
@@ -829,7 +877,7 @@
       processPhysicalStep(dir);
     }
 
-    // --- 6. RENDERING ARENA (CANVAS) ---
+    // --- 7. RENDERING ARENA (CANVAS) ---
     function renderArena() {
       const canvas = document.getElementById('game-canvas');
       const ctx = canvas.getContext('2d');
@@ -892,7 +940,7 @@
       });
     }
 
-    // --- 7. AUDIO HELPER ---
+    // --- 8. AUDIO HELPER ---
     function initAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -917,12 +965,13 @@
       setTimeout(() => playBeep(1200), 120);
     }
 
-    // --- 8. RAPOR EVALUASI & PDF ---
+    // --- 9. RAPOR EVALUASI & PDF ---
     function finishMatch() {
       releaseWakeLock();
       clearInterval(reconnectTimer);
       reconnectTimer = null;
 
+      document.getElementById('pocket-lock-overlay').classList.add('hidden');
       document.getElementById('view-waiting').classList.add('hidden');
       document.getElementById('view-gameplay').classList.add('hidden');
       document.getElementById('view-report').classList.remove('hidden');
@@ -952,6 +1001,7 @@
         peer.destroy();
         peer = null;
       }
+      document.getElementById('pocket-lock-overlay').classList.add('hidden');
       document.getElementById('view-report').classList.add('hidden');
       document.getElementById('view-waiting').classList.add('hidden');
       document.getElementById('view-gameplay').classList.add('hidden');
