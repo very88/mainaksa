@@ -49,7 +49,7 @@
       </div>
       <div>
         <h1 class="text-sm font-extrabold tracking-tight leading-none text-white">MAIN-AKSA 5v5</h1>
-        <p class="text-[10px] text-slate-400 font-medium">Orientasi & Akselerometer Saku</p>
+        <p class="text-[10px] text-slate-400 font-medium">Sensor Akselerometer Vektor 4-Arah</p>
       </div>
     </div>
     <div class="flex items-center gap-2">
@@ -62,16 +62,16 @@
     </div>
   </header>
 
-  <!-- ==================== MAIN ==================== -->
+  <!-- ==================== MAIN CONTENT ==================== -->
   <main class="flex-1 w-full max-w-md mx-auto p-3 flex flex-col justify-start">
 
-    <!-- ----------------- SECTION 1: LOBBY ----------------- -->
+    <!-- ----------------- SECTION 1: LOBBY & SETUP ----------------- -->
     <div id="view-lobby" class="space-y-4">
       <div class="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/80 rounded-2xl p-4 shadow-xl">
         <h2 class="text-base font-extrabold text-amber-400 mb-1">Pilih Arena 5 vs 5</h2>
-        <p class="text-xs text-slate-300 mb-3">Arah gerak di layar mengikuti arah hadap tubuh Anda di lapangan.</p>
+        <p class="text-xs text-slate-300 mb-3">Sensor saku mengenali langkah maju, mundur, dan pergeseran samping.</p>
 
-        <!-- Arena Selection -->
+        <!-- Pilihan Arena -->
         <div class="grid grid-cols-2 gap-2 mb-4">
           <button type="button" onclick="selectGame('gobak')" id="btn-choice-gobak" class="border-2 border-amber-500 bg-amber-500/10 text-amber-300 p-3 rounded-xl text-left touch-btn transition-all">
             <span class="block text-xs font-bold text-amber-400">ARENA 1</span>
@@ -103,11 +103,25 @@
             <div>
               <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Peran di Lapangan</label>
               <select id="player-role" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
-                <!-- Diisi otomatis -->
+                <!-- Diisi otomatis melalui JS -->
               </select>
             </div>
           </div>
 
+          <!-- Posisi Saku Celana -->
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Posisi Saku Celana HP</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" onclick="setPocket('right')" id="btn-pocket-right" class="border border-amber-500 bg-amber-500/20 text-amber-300 py-2 rounded-lg text-xs font-bold transition-all">
+                Saku Kanan
+              </button>
+              <button type="button" onclick="setPocket('left')" id="btn-pocket-left" class="border border-slate-700 bg-slate-900 text-slate-400 py-2 rounded-lg text-xs font-bold transition-all">
+                Saku Kiri
+              </button>
+            </div>
+          </div>
+
+          <!-- Parameter Fisik & Denyut Nadi -->
           <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-700/60">
             <div>
               <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Usia (Tahun)</label>
@@ -120,6 +134,7 @@
           </div>
         </div>
 
+        <!-- Tombol Masuk -->
         <div class="mt-4 space-y-2">
           <button onclick="startGameMode('player')" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs py-3 rounded-xl shadow-lg shadow-amber-500/20 uppercase tracking-wider touch-btn flex items-center justify-center gap-2">
             <span>Masuk Arena (Pemain 5v5)</span>
@@ -139,7 +154,7 @@
         <div>
           <span id="hud-game-name" class="text-[10px] font-bold uppercase text-amber-400 tracking-wider">GOBAK SODOR</span>
           <div class="text-xs font-black text-white" id="hud-player-title">Tim Merah - Penyerang 1</div>
-          <span id="hud-heading-info" class="text-[9px] text-emerald-400 font-bold block">Hadap: MAJU</span>
+          <span id="hud-heading-info" class="text-[9px] text-emerald-400 font-bold block">Status Gerak: DIAM</span>
         </div>
         <div class="flex items-center gap-2">
           <div class="text-right">
@@ -158,7 +173,7 @@
       <div class="relative bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center">
         <canvas id="game-canvas" width="380" height="420" class="w-full h-auto block"></canvas>
 
-        <!-- Overlay Respawn -->
+        <!-- Overlay Respawn Fisik -->
         <div id="respawn-overlay" class="hidden absolute inset-0 bg-red-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
           <div class="w-12 h-12 rounded-full bg-red-600/30 border-2 border-red-500 flex items-center justify-center text-red-300 font-black text-lg mb-2 animate-pulse">
             !
@@ -172,21 +187,14 @@
         </div>
       </div>
 
-      <!-- Sensor Activation Banner -->
+      <!-- Banner Status Sensor Saku & Wake Lock -->
       <div id="sensor-banner" class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
-          <span class="text-xs text-amber-200 font-semibold" id="sensor-status-text">Sensor Saku & Kompas: Belum Aktif</span>
+          <span class="text-xs text-amber-200 font-semibold" id="sensor-status-text">Sensor Saku: Belum Aktif</span>
         </div>
-        <button onclick="requestMotionAndOrientation()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-black px-2.5 py-1.5 rounded-lg touch-btn shadow">
+        <button onclick="requestMotionSensor()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-black px-2.5 py-1.5 rounded-lg touch-btn shadow">
           Aktifkan Sensor
-        </button>
-      </div>
-
-      <!-- Kalibrasi Arah Hadap Awal -->
-      <div class="flex gap-2">
-        <button onclick="calibrateHeading()" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 font-bold text-xs py-2 rounded-xl touch-btn">
-          🎯 Reset Arah Hadap Lapangan (Kalibrasi 0°)
         </button>
       </div>
 
@@ -206,20 +214,22 @@
         </button>
       </div>
 
-      <!-- Selesai Pertandingan -->
+      <!-- Tombol Selesai -->
       <button onclick="finishMatch()" class="w-full bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 font-bold text-xs py-2 rounded-xl mt-2 touch-btn">
         Selesai Pertandingan & Buka Rapor PJOK
       </button>
     </div>
 
-    <!-- ----------------- SECTION 3: RAPOR PJOK ----------------- -->
+    <!-- ----------------- SECTION 3: RAPOR PJOK & CETAK PDF ----------------- -->
     <div id="view-report" class="hidden space-y-4">
       <div id="print-report" class="bg-white text-slate-900 p-6 rounded-2xl shadow-xl border border-slate-200">
+        <!-- Kop Surat -->
         <div class="border-b-2 border-slate-900 pb-3 mb-4 text-center">
           <h2 class="text-base font-black tracking-tight text-slate-900 uppercase">LEMBAR ASESMEN KINERJA PJOK 5 VS 5</h2>
           <p class="text-xs font-semibold text-slate-600">MAIN-AKSA: Digitalisasi Olahraga Tradisional Berbasis Kinestetik</p>
         </div>
 
+        <!-- Identitas Siswa -->
         <div class="grid grid-cols-2 gap-2 text-xs mb-4">
           <div><span class="font-bold text-slate-600">Nama Siswa:</span> <span id="rep-name" class="font-black text-slate-900">-</span></div>
           <div><span class="font-bold text-slate-600">Tim:</span> <span id="rep-team" class="font-black text-slate-900">-</span></div>
@@ -227,6 +237,7 @@
           <div><span class="font-bold text-slate-600">Peran Lapangan:</span> <span id="rep-role" class="font-black text-slate-900">-</span></div>
         </div>
 
+        <!-- Tabel Parameter Kebugaran -->
         <table class="w-full text-xs border-collapse border border-slate-300 mb-4">
           <thead>
             <tr class="bg-slate-100 text-slate-800">
@@ -259,6 +270,7 @@
           </tbody>
         </table>
 
+        <!-- Kolom Tanda Tangan -->
         <div class="grid grid-cols-2 gap-4 mt-8 pt-4 text-center text-xs">
           <div>
             <p class="text-slate-500 mb-10">Peserta Didik,</p>
@@ -271,6 +283,7 @@
         </div>
       </div>
 
+      <!-- Tombol Aksi Cetak PDF -->
       <div class="no-print space-y-2">
         <button onclick="window.print()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs py-3 rounded-xl shadow-lg shadow-emerald-500/20 uppercase tracking-wider touch-btn flex items-center justify-center gap-2">
           <span>Cetak Dokumen / Simpan PDF</span>
@@ -283,11 +296,11 @@
 
   </main>
 
-  <!-- ==================== JAVASCRIPT ==================== -->
+  <!-- ==================== LOGIKA JAVASCRIPT LENGKAP ==================== -->
   <script>
     // --- STATE UTAMA ---
-    let currentGame = 'gobak';
-    let currentMode = 'player';
+    let currentGame = 'gobak'; // 'gobak' atau 'bentengan'
+    let currentMode = 'player'; // 'player' atau 'spectator'
     let team = 'A';
     let role = 'atk_1';
     let playerName = '';
@@ -299,19 +312,21 @@
     let audioCtx = null;
     let wakeLockSentinel = null;
 
-    // --- STATE ORIENTASI / KOMPAS ---
-    let initialHeading = 0;   // Sudut acuan nol (derajat) saat menghadap arena
-    let currentHeading = 0;   // Sudut kompas terkini
-    let currentRelativeDir = 'forward'; // 'forward', 'backward', 'left', 'right'
-
+    // --- STATE SAKU & DETEKSI VEKTOR ---
+    let pocketSide = 'right'; // 'right' atau 'left'
     let players = [];
 
-    // --- WAKE LOCK API ---
+    // --- INTEGRASI SCREEN WAKE LOCK API ---
     async function activateWakeLock() {
       if ('wakeLock' in navigator) {
         try {
           wakeLockSentinel = await navigator.wakeLock.request('screen');
-        } catch (err) {}
+          wakeLockSentinel.addEventListener('release', () => {
+            console.log('Screen Wake Lock dilepaskan.');
+          });
+        } catch (err) {
+          console.warn(`Wake Lock tidak dapat diaktifkan: ${err.name}, ${err.message}`);
+        }
       }
     }
 
@@ -327,7 +342,21 @@
       }
     });
 
-    // --- PILIH ARENA & PERAN ---
+    // --- PILIHAN SAKU CELANA ---
+    function setPocket(side) {
+      pocketSide = side;
+      const btnR = document.getElementById('btn-pocket-right');
+      const btnL = document.getElementById('btn-pocket-left');
+      if (side === 'right') {
+        btnR.className = 'border border-amber-500 bg-amber-500/20 text-amber-300 py-2 rounded-lg text-xs font-bold transition-all';
+        btnL.className = 'border border-slate-700 bg-slate-900 text-slate-400 py-2 rounded-lg text-xs font-bold transition-all';
+      } else {
+        btnL.className = 'border border-amber-500 bg-amber-500/20 text-amber-300 py-2 rounded-lg text-xs font-bold transition-all';
+        btnR.className = 'border border-slate-700 bg-slate-900 text-slate-400 py-2 rounded-lg text-xs font-bold transition-all';
+      }
+    }
+
+    // --- PEMILIHAN ARENA & PERAN ---
     function selectGame(game) {
       currentGame = game;
       const btnGobak = document.getElementById('btn-choice-gobak');
@@ -377,7 +406,7 @@
       }
     }
 
-    // --- MULAI PERMAINAN ---
+    // --- INISIALISASI PERTANDINGAN ---
     async function startGameMode(mode) {
       currentMode = mode;
       playerName = document.getElementById('player-name').value.trim() || 'Peserta Didik';
@@ -457,7 +486,7 @@
       }
     }
 
-    // --- CANVAS RENDER ---
+    // --- PENGGAMBARAN ARENA (CANVAS) ---
     function renderArena() {
       const canvas = document.getElementById('game-canvas');
       const ctx = canvas.getContext('2d');
@@ -519,100 +548,66 @@
       });
     }
 
-    // --- AKTIVASI SENSOR GANDA: GERAK & KOMPAS ORIENTASI ---
-    async function requestMotionAndOrientation() {
+    // --- SENSOR SAKU HP & ANALISIS VEKTOR 4-ARAH ---
+    async function requestMotionSensor() {
       await activateWakeLock();
 
-      // Izin Gerak (iOS)
       if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-        try {
-          const motionPerm = await DeviceMotionEvent.requestPermission();
-          if (motionPerm === 'granted') bindMotionSensor();
-        } catch (e) {}
+        DeviceMotionEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              bindSensorListener();
+            } else {
+              alert('Akses sensor gerak belum diizinkan di browser/setelan HP.');
+            }
+          })
+          .catch(console.error);
       } else {
-        bindMotionSensor();
+        bindSensorListener();
       }
-
-      // Izin Kompas Orientasi (iOS)
-      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-        try {
-          const orientPerm = await DeviceOrientationEvent.requestPermission();
-          if (orientPerm === 'granted') bindOrientationSensor();
-        } catch (e) {}
-      } else {
-        bindOrientationSensor();
-      }
-
-      document.getElementById('sensor-status-text').innerText = 'Sensor Saku & Kompas: AKTIF';
-      document.getElementById('sensor-banner').className = 'bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-2.5 flex items-center justify-between text-emerald-300';
     }
 
-    function bindMotionSensor() {
+    function bindSensorListener() {
       window.addEventListener('devicemotion', (event) => {
-        const acc = event.accelerationIncludingGravity || event.acceleration;
+        const acc = event.acceleration || event.accelerationIncludingGravity;
         if (!acc) return;
 
-        const magnitude = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+        const rawX = acc.x || 0;
+        const rawY = acc.y || 0;
+        const rawZ = acc.z || 0;
+
+        const magnitude = Math.sqrt(rawX * rawX + rawY * rawY + rawZ * rawZ);
         const delta = Math.abs(magnitude - lastSensorAcc);
         lastSensorAcc = magnitude;
 
-        // Sensitivitas hentakan langkah
+        // Ambang batas hentakan kaki
         if (delta > 3.8) {
-          processPhysicalStep();
+          let detectedDir = 'forward';
+
+          // Penyesuaian tanda sumbu lateral sesuai pilihan saku celana
+          const adjustedX = (pocketSide === 'right') ? rawX : -rawX;
+          const adjustedY = rawY;
+
+          const absX = Math.abs(adjustedX);
+          const absY = Math.abs(adjustedY);
+
+          // Evaluasi arah dominan gerakan
+          if (absX > absY && absX > 1.4) {
+            detectedDir = adjustedX > 0 ? 'right' : 'left';
+          } else if (absY >= absX && absY > 1.4) {
+            detectedDir = adjustedY < -1.5 ? 'backward' : 'forward';
+          }
+
+          processStepWithVector(detectedDir);
         }
       });
+
+      document.getElementById('sensor-status-text').innerText = 'Sensor Saku 4-Arah: AKTIF';
+      document.getElementById('sensor-banner').className = 'bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-2.5 flex items-center justify-between text-emerald-300';
     }
 
-    function bindOrientationSensor() {
-      window.addEventListener('deviceorientation', (event) => {
-        // alpha: 0 s/d 360 derajat kompas
-        if (event.alpha !== null) {
-          currentHeading = event.alpha;
-          updateRelativeDirection();
-        }
-      });
-    }
-
-    // --- KALIBRASI TITIK 0° (MENGHADAP ARENA) ---
-    function calibrateHeading() {
-      initialHeading = currentHeading;
-      updateRelativeDirection();
-      playBeep(800);
-      alert('Arah hadap berhasil dikalibrasi sebagai MAJU (0°)!');
-    }
-
-    // Menghitung selisih sudut hadap tubuh terhadap titik nol
-    function updateRelativeDirection() {
-      let diff = (currentHeading - initialHeading + 360) % 360;
-
-      // Kuadran arah hadap tubuh siswa:
-      // Depan: 315° - 45°
-      // Kanan: 45° - 135°
-      // Belakang/Mundur: 135° - 225°
-      // Kiri: 225° - 315°
-      const headingBadge = document.getElementById('hud-heading-info');
-
-      if (diff >= 315 || diff < 45) {
-        currentRelativeDir = 'forward';
-        headingBadge.innerText = 'Hadap: MAJU';
-        headingBadge.className = 'text-[9px] text-emerald-400 font-bold block';
-      } else if (diff >= 45 && diff < 135) {
-        currentRelativeDir = 'right';
-        headingBadge.innerText = 'Hadap: GESER KANAN';
-        headingBadge.className = 'text-[9px] text-amber-400 font-bold block';
-      } else if (diff >= 135 && diff < 225) {
-        currentRelativeDir = 'backward';
-        headingBadge.innerText = 'Hadap: MUNDUR';
-        headingBadge.className = 'text-[9px] text-red-400 font-bold block';
-      } else {
-        currentRelativeDir = 'left';
-        headingBadge.innerText = 'Hadap: GESER KIRI';
-        headingBadge.className = 'text-[9px] text-amber-400 font-bold block';
-      }
-    }
-
-    // --- EKSEKUSI LANGKAH FISIK SESUAI ARAH HADAP ---
-    function processPhysicalStep() {
+    // --- PEMROSESAN LANGKAH VEKTOR ---
+    function processStepWithVector(direction) {
       if (inRespawn) {
         respawnStepsLeft--;
         document.getElementById('respawn-counter').innerText = respawnStepsLeft;
@@ -629,20 +624,40 @@
       teamScore += 5;
       document.getElementById('hud-steps').innerText = totalSteps;
       document.getElementById('team-score').innerText = teamScore;
-      playBeep(440);
 
       const userPlayer = players.find(p => p.isUser);
       if (!userPlayer) return;
 
-      const stepDist = 9; // Jarak perpindahan per langkah
+      const stepDist = 8;
+      const headingBadge = document.getElementById('hud-heading-info');
 
+      // Update HUD status arah
+      if (direction === 'forward') {
+        headingBadge.innerText = 'Gerak: MAJU ▲';
+        headingBadge.className = 'text-[9px] text-emerald-400 font-bold block';
+        playBeep(520);
+      } else if (direction === 'backward') {
+        headingBadge.innerText = 'Gerak: MUNDUR ▼';
+        headingBadge.className = 'text-[9px] text-red-400 font-bold block';
+        playBeep(330);
+      } else if (direction === 'left') {
+        headingBadge.innerText = 'Gerak: GESER KIRI ◄';
+        headingBadge.className = 'text-[9px] text-amber-400 font-bold block';
+        playBeep(420);
+      } else if (direction === 'right') {
+        headingBadge.innerText = 'Gerak: GESER KANAN ►';
+        headingBadge.className = 'text-[9px] text-amber-400 font-bold block';
+        playBeep(420);
+      }
+
+      // Translasi koordinat berdasarkan permainan
       if (currentGame === 'gobak') {
         if (team === 'A') {
-          // Penyerang bergerak 4 arah sesuai hadap badan
-          if (currentRelativeDir === 'forward') userPlayer.y = Math.max(40, userPlayer.y - stepDist);
-          if (currentRelativeDir === 'backward') userPlayer.y = Math.min(380, userPlayer.y + stepDist);
-          if (currentRelativeDir === 'left') userPlayer.x = Math.max(45, userPlayer.x - stepDist);
-          if (currentRelativeDir === 'right') userPlayer.x = Math.min(335, userPlayer.x + stepDist);
+          // Tim Penyerang: 4 arah bebas
+          if (direction === 'forward') userPlayer.y = Math.max(40, userPlayer.y - stepDist);
+          if (direction === 'backward') userPlayer.y = Math.min(380, userPlayer.y + stepDist);
+          if (direction === 'left') userPlayer.x = Math.max(45, userPlayer.x - stepDist);
+          if (direction === 'right') userPlayer.x = Math.min(335, userPlayer.x + stepDist);
 
           // Tembus garis belakang
           if (userPlayer.y <= 50) {
@@ -651,8 +666,8 @@
             playWhistle();
           }
         } else {
-          // Penjaga Garis: Hanya bergerak menyamping kiri-kanan
-          if (currentRelativeDir === 'left' || currentRelativeDir === 'backward') {
+          // Tim Penjaga: Prioritas menyamping pada jalurnya
+          if (direction === 'left' || direction === 'backward') {
             userPlayer.x = Math.max(45, userPlayer.x - stepDist);
           } else {
             userPlayer.x = Math.min(335, userPlayer.x + stepDist);
@@ -661,28 +676,27 @@
       } else {
         // BENTENGAN
         if (team === 'A') {
-          if (currentRelativeDir === 'forward') userPlayer.x = Math.min(330, userPlayer.x + stepDist);
-          if (currentRelativeDir === 'backward') userPlayer.x = Math.max(50, userPlayer.x - stepDist);
-          if (currentRelativeDir === 'left') userPlayer.y = Math.max(60, userPlayer.y - stepDist);
-          if (currentRelativeDir === 'right') userPlayer.y = Math.min(360, userPlayer.y + stepDist);
+          if (direction === 'forward') userPlayer.x = Math.min(330, userPlayer.x + stepDist);
+          if (direction === 'backward') userPlayer.x = Math.max(50, userPlayer.x - stepDist);
+          if (direction === 'left') userPlayer.y = Math.max(60, userPlayer.y - stepDist);
+          if (direction === 'right') userPlayer.y = Math.min(360, userPlayer.y + stepDist);
         } else {
-          if (currentRelativeDir === 'forward') userPlayer.x = Math.max(50, userPlayer.x - stepDist);
-          if (currentRelativeDir === 'backward') userPlayer.x = Math.min(330, userPlayer.x + stepDist);
-          if (currentRelativeDir === 'left') userPlayer.y = Math.max(60, userPlayer.y - stepDist);
-          if (currentRelativeDir === 'right') userPlayer.y = Math.min(360, userPlayer.y + stepDist);
+          if (direction === 'forward') userPlayer.x = Math.max(50, userPlayer.x - stepDist);
+          if (direction === 'backward') userPlayer.x = Math.min(330, userPlayer.x + stepDist);
+          if (direction === 'left') userPlayer.y = Math.max(60, userPlayer.y - stepDist);
+          if (direction === 'right') userPlayer.y = Math.min(360, userPlayer.y + stepDist);
         }
       }
 
       renderArena();
     }
 
-    // Kontrol Layar Sentuh Manual
+    // Tombol Manual Fallback
     function handleManualMovement(dir) {
-      currentRelativeDir = dir;
-      processPhysicalStep();
+      processStepWithVector(dir);
     }
 
-    // --- AUDIO ---
+    // --- AUDIO HELPER ---
     function initAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -707,7 +721,7 @@
       setTimeout(() => playBeep(1200), 120);
     }
 
-    // --- SELESAI & CETAK PDF ---
+    // --- LAPORAN & CETAK PDF ---
     function finishMatch() {
       releaseWakeLock();
 
@@ -740,6 +754,7 @@
       teamScore = 0;
     }
 
+    // Inisialisasi awal
     updateRoleOptions();
   </script>
 </body>
