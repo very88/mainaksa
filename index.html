@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>MAIN-AKSA: 5 vs 5 MOBA Arena (Pocket Lock Edition)</title>
+  <title>MAIN-AKSA: 5 vs 5 MOBA Arena (Field-Ready WebRTC Edition)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
@@ -53,7 +53,7 @@
       </div>
       <div>
         <h1 class="text-sm font-extrabold tracking-tight leading-none text-white">MAIN-AKSA 5v5</h1>
-        <p class="text-[10px] text-slate-400 font-medium">Kinestetik & Mode Kunci Saku</p>
+        <p class="text-[10px] text-slate-400 font-medium">Multi-NAT TURN & Auto-Handshake</p>
       </div>
     </div>
     <div class="flex items-center gap-1.5">
@@ -91,12 +91,12 @@
         <div id="form-player-container" class="space-y-3">
           <div>
             <label class="block text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1">4-Digit PIN Room Guru</label>
-            <input type="text" id="input-pin" maxlength="4" placeholder="Misal: 5821" class="w-full bg-slate-950 border border-amber-500/50 rounded-xl px-3 py-2.5 text-center text-lg font-black tracking-widest text-amber-300 focus:outline-none focus:border-amber-400">
+            <input type="tel" id="input-pin" maxlength="4" placeholder="Misal: 5821" class="w-full bg-slate-950 border border-amber-500/50 rounded-xl px-3 py-2.5 text-center text-lg font-black tracking-widest text-amber-300 focus:outline-none focus:border-amber-400">
           </div>
 
           <div>
             <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1">Nama Siswa / No. Absen</label>
-            <input type="text" id="player-name" placeholder="Misal: Ari Pratama (12)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+            <input type="text" id="player-name" placeholder="Misal: Ari (12)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
           </div>
 
           <div class="grid grid-cols-2 gap-2">
@@ -172,15 +172,20 @@
     <!-- ----------------- SECTION 2: RUANG TUNGGU SISWA ----------------- -->
     <div id="view-waiting" class="hidden space-y-4 text-center">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-        <div class="w-14 h-14 mx-auto rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center text-amber-400 font-black text-xl mb-3 animate-pulse">
-          ⏳
+        <div id="waiting-icon" class="w-14 h-14 mx-auto rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center text-amber-400 font-black text-xl mb-3 animate-pulse">
+          📡
         </div>
-        <h3 class="text-base font-extrabold text-white">Terhubung ke Room: <span id="waiting-pin" class="text-amber-400">----</span></h3>
+        <h3 class="text-base font-extrabold text-white">Room PIN: <span id="waiting-pin" class="text-amber-400">----</span></h3>
         <p class="text-xs text-slate-400 mt-1">Nama: <span id="waiting-player-name" class="font-bold text-slate-200">-</span></p>
+        
         <div class="my-4 py-3 px-4 rounded-xl bg-slate-950 border border-slate-800">
-          <p class="text-xs text-amber-300 font-semibold animate-bounce">Menunggu Wasit Menekan Mulai...</p>
-          <p class="text-[10px] text-slate-500 mt-1">Layar akan terbuka otomatis begitu wasit meniup peluit dari laptop.</p>
+          <p id="waiting-status-title" class="text-xs text-amber-300 font-bold animate-bounce">Menghubungkan ke Laptop Wasit...</p>
+          <p id="waiting-status-sub" class="text-[10px] text-slate-400 mt-1">Menembus jalur sinyal lapangan. Mohon tunggu beberapa detik.</p>
         </div>
+
+        <button onclick="forceRetryHandshake()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300 font-bold text-xs py-2.5 rounded-xl touch-btn">
+          🔄 Ketuk Jika Belum Muncul di Layar Guru
+        </button>
       </div>
     </div>
 
@@ -190,8 +195,11 @@
       <!-- Top HUD Panel -->
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between shadow-md">
         <div>
-          <span id="hud-game-name" class="text-[10px] font-bold uppercase text-amber-400 tracking-wider">GOBAK SODOR 5V5</span>
-          <div class="text-xs font-black text-white" id="hud-player-title">Tim Merah - Penyerang 1</div>
+          <div class="flex items-center gap-2">
+            <span id="hud-game-name" class="text-[10px] font-bold uppercase text-amber-400 tracking-wider">GOBAK SODOR 5V5</span>
+            <span id="hud-online-count" class="hidden px-1.5 py-0.5 text-[9px] font-black bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/40">0 Siswa Terhubung</span>
+          </div>
+          <div class="text-xs font-black text-white" id="hud-player-title">Tim Merah - Penyerang</div>
           <span id="hud-heading-info" class="text-[9px] text-emerald-400 font-bold block">Gerak: DIAM</span>
         </div>
         <div class="flex items-center gap-2">
@@ -204,6 +212,17 @@
             <span class="text-[9px] text-slate-400 block font-bold">LANGKAH</span>
             <span id="hud-steps" class="text-base font-black text-cyan-400 leading-none">0</span>
           </div>
+        </div>
+      </div>
+
+      <!-- Daftar Nama Siswa yang Sudah Masuk (Khusus Layar Guru) -->
+      <div id="referee-player-roster" class="hidden bg-slate-900/90 border border-slate-800 rounded-xl p-2">
+        <div class="text-[10px] font-bold text-slate-400 uppercase mb-1 flex justify-between">
+          <span>Daftar Siswa di Dalam Room:</span>
+          <span id="roster-summary" class="text-amber-400">Merah: 0 | Biru: 0</span>
+        </div>
+        <div id="roster-badges" class="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
+          <span class="text-[10px] text-slate-500 italic">Menunggu siswa memasukkan PIN...</span>
         </div>
       </div>
 
@@ -225,8 +244,8 @@
         </div>
       </div>
 
-      <!-- Tombol Mode Kunci Saku & Sensor Banner -->
-      <div class="grid grid-cols-2 gap-2">
+      <!-- Tombol Mode Kunci Saku & Sensor Banner (Khusus Siswa) -->
+      <div id="student-action-bar" class="grid grid-cols-2 gap-2">
         <button onclick="enablePocketLock()" class="bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white font-extrabold text-xs py-2.5 px-3 rounded-xl shadow-lg border border-purple-500/30 touch-btn flex items-center justify-center gap-1.5">
           <span>🔒 KUNCI LAYAR SAKU</span>
         </button>
@@ -236,7 +255,7 @@
       </div>
 
       <!-- Kontrol Layar Sentuh Alternatif -->
-      <div class="grid grid-cols-4 gap-1.5 pt-1">
+      <div id="student-dpad" class="grid grid-cols-4 gap-1.5 pt-1">
         <button onclick="handleManualMovement('left')" class="bg-slate-800 text-white font-extrabold py-2.5 rounded-xl border border-slate-700 touch-btn text-xs">
           ◄ Kiri
         </button>
@@ -254,10 +273,10 @@
       <!-- Panel Kendali Wasit -->
       <div id="referee-controls-panel" class="hidden space-y-2 pt-2 border-t border-slate-800">
         <div class="flex gap-2">
-          <button onclick="refereeBroadcastState('playing')" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider touch-btn">
+          <button onclick="refereeBroadcastState('playing')" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs py-2.5 rounded-xl uppercase tracking-wider touch-btn shadow-lg shadow-emerald-500/20">
             ▶ Tiup Peluit / Mulai Laga
           </button>
-          <button onclick="refereeBroadcastState('finished')" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-black text-xs py-2.5 rounded-xl uppercase tracking-wider touch-btn">
+          <button onclick="refereeBroadcastState('finished')" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-black text-xs py-2.5 rounded-xl uppercase tracking-wider touch-btn shadow-lg shadow-red-600/20">
             ⏹ Peluit Akhir / Selesai Match
           </button>
         </div>
@@ -269,7 +288,7 @@
       <div id="print-report" class="bg-white text-slate-900 p-6 rounded-2xl shadow-xl border border-slate-200">
         <div class="border-b-2 border-slate-900 pb-3 mb-4 text-center">
           <h2 class="text-base font-black tracking-tight text-slate-900 uppercase">LEMBAR ASESMEN KINERJA PJOK 5 VS 5</h2>
-          <p class="text-xs font-semibold text-slate-600">MAIN-AKSA: Digitalisasi Olahraga Tradisional Berbasis Kinestetik</p>
+          <p class="text-xs font-semibold text-slate-600">MAIN-AKSA: Mulai Permainan Tradisional, Akselerasi Kebugaran Bersama</p>
         </div>
 
         <div class="grid grid-cols-2 gap-2 text-xs mb-4">
@@ -337,14 +356,12 @@
 
   <!-- ==================== OVERLAY MODE KUNCI SAKU (LAYAR HITAM) ==================== -->
   <div id="pocket-lock-overlay" class="hidden fixed inset-0 bg-black z-50 flex flex-col justify-between items-center p-6 text-center select-none" style="touch-action: none;">
-    <!-- Bagian Atas: Keterangan Ringkas -->
     <div class="pt-8">
       <span class="inline-block w-3 h-3 rounded-full bg-emerald-500 animate-ping mb-2"></span>
       <h2 class="text-xs font-bold text-slate-600 tracking-wider uppercase">MODE SAKU AKTIF</h2>
       <p class="text-[10px] text-slate-700">Layar terlindungi dari sentuhan paha. Sensor gerak tetap merekam penuh.</p>
     </div>
 
-    <!-- Bagian Tengah: HUD Minimalis Samar -->
     <div class="space-y-3">
       <div class="text-4xl font-black text-slate-800 tracking-tighter" id="pocket-lock-steps">
         0
@@ -352,7 +369,6 @@
       <p class="text-[10px] text-slate-700 font-semibold tracking-widest uppercase">LANGKAH TEREKAM</p>
     </div>
 
-    <!-- Bagian Bawah: Buka Kunci (Tekan Dua Kali / Double-Tap) -->
     <div class="pb-10 w-full max-w-xs">
       <button id="btn-unlock-pocket" onclick="handlePocketUnlockClick()" class="w-full bg-slate-900 border border-slate-800 text-slate-500 font-bold text-xs py-3.5 rounded-2xl touch-btn active:bg-slate-800 active:text-slate-300">
         Ketuk 2x Cepat untuk Membuka
@@ -362,7 +378,36 @@
 
   <!-- ==================== LOGIKA JAVASCRIPT & WEBRTC ==================== -->
   <script>
-    // --- 1. STATE UTAMA ---
+    // --- 1. KONFIGURASI ICE SERVERS (STUN + TURN RELAY UNTUK JARINGAN SELULER LAPANGAN) ---
+    const PEER_CONFIG = {
+      debug: 1,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun.cloudflare.com:3478' },
+          // Public Free TURN Relay Servers (Menembus CGNAT Operator Seluler Telkomsel/Indosat/XL/Axis)
+          {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          },
+          {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          },
+          {
+            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+          }
+        ],
+        iceCandidatePoolSize: 10
+      }
+    };
+
+    // --- 2. STATE UTAMA ---
     let currentPin = '';
     let currentRoleType = 'player';
     let currentGame = 'gobak';
@@ -372,32 +417,36 @@
     let playerName = '';
     let pocketSide = 'right';
 
+    // ID Sesi Unik agar siswa yang memilih slot sama TIDAK saling menimpa
+    let uniquePlayerKey = '';
+
     let totalSteps = 0;
     let teamScoreA = 0;
     let teamScoreB = 0;
     let inRespawn = false;
     let respawnStepsLeft = 10;
-    let lastSensorAcc = 0;
     let audioCtx = null;
     let wakeLockSentinel = null;
 
     let localPlayerPos = { x: 190, y: 380 };
     let roomPlayers = {};
 
-    // WebRTC PeerJS References & Auto-Reconnect
+    // WebRTC PeerJS References & Handshake Timers
     let peer = null;
     let refereeConn = null;
-    let clientConnections = [];
+    let clientConnections = {}; // Map playerKey -> conn
     let reconnectTimer = null;
+    let handshakeAckTimer = null;
+    let isRegisteredConfirmed = false;
     let isReconnecting = false;
-    const PEER_PREFIX = 'mainaksa-room-';
+    const PEER_PREFIX = 'mainaksa26-room-';
 
     // State Debounce Sensor & Mode Kunci Saku
     let lastStepTime = 0;
     let unlockTapCount = 0;
     let unlockTapTimer = null;
 
-    // --- 2. SCREEN WAKE LOCK API ---
+    // --- 3. SCREEN WAKE LOCK API ---
     async function activateWakeLock() {
       if ('wakeLock' in navigator) {
         try {
@@ -418,10 +467,9 @@
       }
     });
 
-    // --- 3. FITUR MODE KUNCI SAKU (LAYAR GELAP ANTI-SENTUH) ---
+    // --- 4. FITUR MODE KUNCI SAKU ---
     function enablePocketLock() {
-      const overlay = document.getElementById('pocket-lock-overlay');
-      overlay.classList.remove('hidden');
+      document.getElementById('pocket-lock-overlay').classList.remove('hidden');
       document.getElementById('pocket-lock-steps').innerText = totalSteps;
       activateWakeLock();
     }
@@ -448,7 +496,7 @@
       }
     }
 
-    // --- 4. UI LOBI & PERAN ---
+    // --- 5. UI LOBI & PERAN ---
     function updateConnBadge(status, colorClass, dotColor) {
       const badge = document.getElementById('conn-status-badge');
       const text = document.getElementById('conn-text');
@@ -513,53 +561,78 @@
 
       if (teamVal === 'A') {
         roleSelect.innerHTML = `
-          <option value="atk_1">Slot 1 - Penyerang Sayap Kiri</option>
-          <option value="atk_2">Slot 2 - Penyerang Sayap Kanan</option>
-          <option value="atk_3">Slot 3 - Penyerang Poros Tengah</option>
-          <option value="atk_4">Slot 4 - Penyerbu Pendukung</option>
-          <option value="atk_5">Slot 5 - Penyerbu Jangkar</option>
+          <option value="Penyerang 1">Slot 1 - Penyerang Sayap Kiri</option>
+          <option value="Penyerang 2">Slot 2 - Penyerang Sayap Kanan</option>
+          <option value="Penyerang 3">Slot 3 - Penyerang Poros Tengah</option>
+          <option value="Penyerang 4">Slot 4 - Penyerbu Pendukung</option>
+          <option value="Penyerang 5">Slot 5 - Penyerbu Jangkar</option>
         `;
       } else {
         roleSelect.innerHTML = `
-          <option value="def_sodor">Kapten Penjaga Garis Sodor</option>
-          <option value="def_1">Penjaga Garis 1 (Garis Depan)</option>
-          <option value="def_2">Penjaga Garis 2</option>
-          <option value="def_3">Penjaga Garis 3</option>
-          <option value="def_4">Penjaga Garis 4 (Garis Belakang)</option>
+          <option value="Kapten Sodor">Kapten Penjaga Garis Sodor</option>
+          <option value="Penjaga 1">Penjaga Garis 1 (Depan)</option>
+          <option value="Penjaga 2">Penjaga Garis 2</option>
+          <option value="Penjaga 3">Penjaga Garis 3</option>
+          <option value="Penjaga 4">Penjaga Garis 4 (Belakang)</option>
         `;
       }
     }
 
-    // --- 5. WEBRTC MULTIPLAYER DENGAN AUTO-RECONNECT ---
+    // --- 6. WEBRTC MULTIPLAYER DENGAN TURN RELAY & PROTOKOL ACK ---
 
+    // A. GURU MEMBUAT ROOM
     function createRoomAsReferee() {
       currentPin = Math.floor(1000 + Math.random() * 9000).toString();
       currentRoleType = 'referee';
 
       document.getElementById('room-badge').innerText = `PIN: ${currentPin}`;
-      document.getElementById('hud-player-title').innerText = `Layar Wasit Proyektor - Room ${currentPin}`;
+      document.getElementById('hud-game-name').innerText = (currentGame === 'gobak') ? 'GOBAK SODOR 5V5' : 'BENTENGAN 5V5';
+      document.getElementById('hud-player-title').innerText = `Layar Proyektor Wasit - PIN ${currentPin}`;
       document.getElementById('referee-controls-panel').classList.remove('hidden');
+      document.getElementById('referee-player-roster').classList.remove('hidden');
+      document.getElementById('hud-online-count').classList.remove('hidden');
+      document.getElementById('student-action-bar').classList.add('hidden');
+      document.getElementById('student-dpad').classList.add('hidden');
 
-      peer = new Peer(PEER_PREFIX + currentPin);
+      updateConnBadge('Menyiapkan Room...', 'bg-amber-950 text-amber-400', 'bg-amber-400 animate-ping');
+
+      peer = new Peer(PEER_PREFIX + currentPin, PEER_CONFIG);
 
       peer.on('open', (id) => {
-        updateConnBadge('Online (Wasit)', 'bg-emerald-950 text-emerald-400', 'bg-emerald-400');
+        updateConnBadge('Room Aktif', 'bg-emerald-950 text-emerald-400', 'bg-emerald-400');
       });
 
       peer.on('connection', (conn) => {
-        clientConnections.push(conn);
-
-        conn.on('data', (data) => {
-          handleIncomingPeerData(data, conn);
+        conn.on('open', () => {
+          // Simpan referensi koneksi dan langsung dengar datanya
+          conn.on('data', (data) => {
+            handleIncomingPeerData(data, conn);
+          });
         });
 
         conn.on('close', () => {
-          clientConnections = clientConnections.filter(c => c !== conn);
+          // Bersihkan koneksi jika terputus
+          Object.keys(clientConnections).forEach(k => {
+            if (clientConnections[k] === conn) {
+              delete clientConnections[k];
+            }
+          });
+          updateRefereeRosterUI();
         });
+      });
+
+      peer.on('disconnected', () => {
+        // Jika signaling wasit sempat terputus, otomatis sambung kembali
+        peer.reconnect();
       });
 
       peer.on('error', (err) => {
         console.error('Peer Error Wasit:', err);
+        if (err.type === 'unavailable-id') {
+          // Jika PIN kebetulan terpakai, buat ulang PIN baru
+          peer.destroy();
+          createRoomAsReferee();
+        }
       });
 
       document.getElementById('view-lobby').classList.add('hidden');
@@ -568,6 +641,7 @@
       renderArena();
     }
 
+    // B. SISWA BERGABUNG KE ROOM
     function joinRoomAsPlayer() {
       currentPin = document.getElementById('input-pin').value.trim();
       playerName = document.getElementById('player-name').value.trim() || 'Siswa';
@@ -579,18 +653,32 @@
         return;
       }
 
+      // Buat ID unik per siswa agar meskipun memilih slot yang sama tidak saling menimpa
+      if (!uniquePlayerKey) {
+        const randSuffix = Math.floor(100 + Math.random() * 900);
+        uniquePlayerKey = `${team}_${playerName.replace(/\s+/g, '').slice(0, 6)}_${randSuffix}`;
+      }
+
       currentRoleType = 'player';
+      isRegisteredConfirmed = false;
       document.getElementById('room-badge').innerText = `PIN: ${currentPin}`;
       document.getElementById('waiting-pin').innerText = currentPin;
-      document.getElementById('waiting-player-name').innerText = playerName;
+      document.getElementById('waiting-player-name').innerText = `${playerName} (${team === 'A' ? 'Tim Merah' : 'Tim Biru'})`;
+      document.getElementById('hud-player-title').innerText = `${playerName} - ${role}`;
 
-      localPlayerPos = (team === 'A') ? { x: 70 + Math.random() * 240, y: 380 } : { x: 190, y: 120 + Math.random() * 180 };
-
-      initStudentPeerConnection();
+      localPlayerPos = (team === 'A')
+        ? { x: 65 + Math.floor(Math.random() * 250), y: 375 }
+        : { x: 80 + Math.floor(Math.random() * 220), y: 135 + Math.floor(Math.random() * 150) };
 
       document.getElementById('view-lobby').classList.add('hidden');
       document.getElementById('view-waiting').classList.remove('hidden');
       initAudio();
+
+      // Beri jeda acak 100-700ms agar 10 HP siswa tidak menabrak server pada milidetik yang sama
+      const randomJitter = Math.floor(100 + Math.random() * 600);
+      setTimeout(() => {
+        initStudentPeerConnection();
+      }, randomJitter);
     }
 
     function initStudentPeerConnection() {
@@ -598,17 +686,20 @@
         peer.destroy();
       }
 
-      peer = new Peer();
+      updateConnBadge('Menyambung...', 'bg-amber-950 text-amber-400', 'bg-amber-400 animate-ping');
+      peer = new Peer(PEER_CONFIG);
 
       peer.on('open', () => {
         connectToReferee();
       });
 
       peer.on('error', (err) => {
+        console.warn('Peer error siswa:', err.type);
         triggerAutoReconnect();
       });
 
       peer.on('disconnected', () => {
+        if (peer && !peer.destroyed) peer.reconnect();
         triggerAutoReconnect();
       });
     }
@@ -616,31 +707,31 @@
     function connectToReferee() {
       if (!peer || peer.destroyed) return;
 
-      updateConnBadge('Menyambung...', 'bg-amber-950 text-amber-400', 'bg-amber-400 animate-ping');
+      if (refereeConn) {
+        try { refereeConn.close(); } catch (e) {}
+      }
 
+      // Gunakan serialization 'json' agar kompatibel penuh lintas browser Android/iOS
       refereeConn = peer.connect(PEER_PREFIX + currentPin, {
-        reliable: true
+        reliable: true,
+        serialization: 'json'
       });
 
       refereeConn.on('open', () => {
         isReconnecting = false;
         clearInterval(reconnectTimer);
         reconnectTimer = null;
-        updateConnBadge('Terhubung', 'bg-emerald-950 text-emerald-400', 'bg-emerald-400');
 
-        refereeConn.send({
-          type: 'register',
-          playerKey: `${team}_${role}`,
-          playerData: {
-            name: playerName,
-            team: team,
-            role: role,
-            x: localPlayerPos.x,
-            y: localPlayerPos.y,
-            steps: totalSteps,
-            inRespawn: inRespawn
+        // Kirim paket registrasi berulang setiap 2 detik sampai mendapat balasan ACK dari laptop guru
+        sendRegisterPacket();
+        clearInterval(handshakeAckTimer);
+        handshakeAckTimer = setInterval(() => {
+          if (!isRegisteredConfirmed) {
+            sendRegisterPacket();
+          } else {
+            clearInterval(handshakeAckTimer);
           }
-        });
+        }, 2000);
       });
 
       refereeConn.on('data', (data) => {
@@ -648,12 +739,39 @@
       });
 
       refereeConn.on('close', () => {
+        isRegisteredConfirmed = false;
         triggerAutoReconnect();
       });
 
       refereeConn.on('error', () => {
+        isRegisteredConfirmed = false;
         triggerAutoReconnect();
       });
+    }
+
+    function sendRegisterPacket() {
+      if (!refereeConn || !refereeConn.open) return;
+      refereeConn.send({
+        type: 'register',
+        playerKey: uniquePlayerKey,
+        playerData: {
+          name: playerName,
+          team: team,
+          role: role,
+          x: localPlayerPos.x,
+          y: localPlayerPos.y,
+          steps: totalSteps,
+          inRespawn: inRespawn
+        }
+      });
+    }
+
+    // Tombol paksa sambung ulang manual jika siswa tertahan di ruang tunggu
+    function forceRetryHandshake() {
+      isRegisteredConfirmed = false;
+      document.getElementById('waiting-status-title').innerText = 'Menyambungkan Ulang ke Guru...';
+      document.getElementById('waiting-status-title').className = 'text-xs text-amber-300 font-bold animate-bounce';
+      initStudentPeerConnection();
     }
 
     function triggerAutoReconnect() {
@@ -665,16 +783,38 @@
 
       if (!reconnectTimer) {
         reconnectTimer = setInterval(() => {
-          connectToReferee();
-        }, 2000);
+          if (!refereeConn || !refereeConn.open) {
+            initStudentPeerConnection();
+          }
+        }, 4500); // Interval 4.5 detik agar proses negosiasi TURN server seluler tidak terputus prematur
       }
     }
 
+    // C. PENANGANAN DATA MASUK (WASIT & SISWA)
     function handleIncomingPeerData(data, senderConn) {
+      if (!data || !data.type) return;
+
+      // 1. Wasit menerima pendaftaran siswa baru
       if (data.type === 'register' && currentRoleType === 'referee') {
         roomPlayers[data.playerKey] = data.playerData;
+        if (senderConn) {
+          clientConnections[data.playerKey] = senderConn;
+          // Balas konfirmasi ACK langsung ke HP siswa tersebut
+          senderConn.send({
+            type: 'ack_registered',
+            game: currentGame,
+            gameState: currentGameState,
+            roomPlayers: roomPlayers,
+            teamScoreA: teamScoreA,
+            teamScoreB: teamScoreB
+          });
+        }
+
+        playBeep(660);
+        updateRefereeRosterUI();
         broadcastToAllClients({
           type: 'sync_state',
+          game: currentGame,
           roomPlayers: roomPlayers,
           teamScoreA: teamScoreA,
           teamScoreB: teamScoreB,
@@ -683,7 +823,33 @@
         renderArena();
       }
 
+      // 2. Siswa menerima konfirmasi ACK dari laptop wasit
+      if (data.type === 'ack_registered' && currentRoleType === 'player') {
+        isRegisteredConfirmed = true;
+        clearInterval(handshakeAckTimer);
+        currentGame = data.game || 'gobak';
+        roomPlayers = data.roomPlayers || {};
+        updateConnBadge('Terdaftar di Guru', 'bg-emerald-950 text-emerald-400', 'bg-emerald-400');
+
+        // Ubah tampilan ruang tunggu menjadi Hijau (Berhasil Masuk Dashboard Guru)
+        document.getElementById('waiting-icon').innerText = '✅';
+        document.getElementById('waiting-icon').className = 'w-14 h-14 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 font-black text-xl mb-3';
+        document.getElementById('waiting-status-title').innerText = 'BERHASIL MASUK DI LAYAR GURU!';
+        document.getElementById('waiting-status-title').className = 'text-xs text-emerald-400 font-black';
+        document.getElementById('waiting-status-sub').innerText = 'Nama Anda sudah tampil di proyektor. Menunggu wasit meniup peluit mulai.';
+        playBeep(800);
+
+        // Jika ternyata guru sudah memulai pertandingan sebelumnya, langsung masuk ke arena
+        if (data.gameState === 'playing') {
+          enterGameplayStudent();
+        }
+      }
+
+      // 3. Wasit menerima update langkah/posisi siswa
       if (data.type === 'player_update' && currentRoleType === 'referee') {
+        if (!roomPlayers[data.playerKey] && data.playerData) {
+          roomPlayers[data.playerKey] = data.playerData;
+        }
         if (roomPlayers[data.playerKey]) {
           roomPlayers[data.playerKey].x = data.x;
           roomPlayers[data.playerKey].y = data.y;
@@ -693,8 +859,11 @@
         if (data.scoreBonusA) teamScoreA += data.scoreBonusA;
         if (data.scoreBonusB) teamScoreB += data.scoreBonusB;
 
+        document.getElementById('team-score').innerText = `${teamScoreA} : ${teamScoreB}`;
+
         broadcastToAllClients({
           type: 'sync_state',
+          game: currentGame,
           roomPlayers: roomPlayers,
           teamScoreA: teamScoreA,
           teamScoreB: teamScoreB,
@@ -703,32 +872,27 @@
         renderArena();
       }
 
+      // 4. Siswa menerima sinkronisasi arena dari wasit
       if (data.type === 'sync_state' && currentRoleType === 'player') {
-        roomPlayers = data.roomPlayers;
-        teamScoreA = data.teamScoreA;
-        teamScoreB = data.teamScoreB;
+        isRegisteredConfirmed = true;
+        currentGame = data.game || currentGame;
+        roomPlayers = data.roomPlayers || {};
+        teamScoreA = data.teamScoreA || 0;
+        teamScoreB = data.teamScoreB || 0;
         document.getElementById('team-score').innerText = (team === 'A') ? teamScoreA : teamScoreB;
 
         if (data.gameState === 'playing' && currentGameState !== 'playing') {
-          currentGameState = 'playing';
-          document.getElementById('view-waiting').classList.add('hidden');
-          document.getElementById('view-gameplay').classList.remove('hidden');
-          activateWakeLock();
-          bindSensorListener();
+          enterGameplayStudent();
         }
-
         renderArena();
       }
 
+      // 5. Perintah Mulai Laga
       if (data.type === 'cmd_start' && currentRoleType === 'player') {
-        currentGameState = 'playing';
-        document.getElementById('view-waiting').classList.add('hidden');
-        document.getElementById('view-gameplay').classList.remove('hidden');
-        activateWakeLock();
-        bindSensorListener();
-        playWhistle();
+        enterGameplayStudent();
       }
 
+      // 6. Perintah Selesai Laga
       if (data.type === 'cmd_finish') {
         currentGameState = 'finished';
         document.getElementById('pocket-lock-overlay').classList.add('hidden');
@@ -736,9 +900,53 @@
       }
     }
 
+    function enterGameplayStudent() {
+      currentGameState = 'playing';
+      document.getElementById('view-waiting').classList.add('hidden');
+      document.getElementById('view-gameplay').classList.remove('hidden');
+      document.getElementById('hud-game-name').innerText = (currentGame === 'gobak') ? 'GOBAK SODOR 5V5' : 'BENTENGAN 5V5';
+      activateWakeLock();
+      bindSensorListener();
+      playWhistle();
+      renderArena();
+    }
+
+    function updateRefereeRosterUI() {
+      const keys = Object.keys(roomPlayers);
+      const countBadge = document.getElementById('hud-online-count');
+      const rosterContainer = document.getElementById('roster-badges');
+      const summary = document.getElementById('roster-summary');
+
+      countBadge.innerText = `${keys.length} Siswa Masuk`;
+
+      let countA = 0;
+      let countB = 0;
+      rosterContainer.innerHTML = '';
+
+      if (keys.length === 0) {
+        rosterContainer.innerHTML = '<span class="text-[10px] text-slate-500 italic">Menunggu siswa memasukkan PIN...</span>';
+      } else {
+        keys.forEach(k => {
+          const p = roomPlayers[k];
+          if (p.team === 'A') countA++; else countB++;
+          const badgeColor = (p.team === 'A')
+            ? 'bg-red-950/80 text-red-300 border-red-700/50'
+            : 'bg-blue-950/80 text-blue-300 border-blue-700/50';
+          rosterContainer.innerHTML += `
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">
+              ${p.name}
+            </span>
+          `;
+        });
+      }
+      summary.innerText = `Merah: ${countA} | Biru: ${countB}`;
+    }
+
     function broadcastToAllClients(msg) {
-      clientConnections.forEach(conn => {
-        if (conn.open) conn.send(msg);
+      Object.values(clientConnections).forEach(conn => {
+        if (conn && conn.open) {
+          try { conn.send(msg); } catch (e) {}
+        }
       });
     }
 
@@ -747,13 +955,24 @@
       if (stateCmd === 'playing') {
         playWhistle();
         broadcastToAllClients({ type: 'cmd_start' });
+        // Kirim juga sync_state sebagai cadangan jika ada paket cmd_start yang tercecer
+        setTimeout(() => {
+          broadcastToAllClients({
+            type: 'sync_state',
+            game: currentGame,
+            roomPlayers: roomPlayers,
+            teamScoreA: teamScoreA,
+            teamScoreB: teamScoreB,
+            gameState: 'playing'
+          });
+        }, 300);
       } else if (stateCmd === 'finished') {
         broadcastToAllClients({ type: 'cmd_finish' });
         finishMatch();
       }
     }
 
-    // --- 6. SENSOR SAKU VEKTOR SENSITIF (GRAVITATIONAL FILTER + DEBOUNCE) ---
+    // --- 7. SENSOR SAKU VEKTOR SENSITIF (GRAVITATIONAL FILTER + DEBOUNCE) ---
     function requestMotionSensor() {
       activateWakeLock();
       if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -767,7 +986,6 @@
 
     function bindSensorListener() {
       window.addEventListener('devicemotion', (event) => {
-        // Menggunakan accelerationIncludingGravity untuk dukungan penuh Android & iOS
         const acc = event.accelerationIncludingGravity;
         if (!acc || acc.x === null || acc.y === null || acc.z === null) return;
 
@@ -775,13 +993,10 @@
         const rawY = acc.y;
         const rawZ = acc.z;
 
-        // Vektor resultan
         const magnitude = Math.sqrt(rawX * rawX + rawY * rawY + rawZ * rawZ);
-        // Menghilangkan gravitasi statis (~9.8 m/s^2)
         const dynamicAcc = Math.abs(magnitude - 9.8);
         const now = Date.now();
 
-        // Ambang batas dinamis 1.8 + jeda pendinginan langkah 280ms
         if (dynamicAcc > 1.8 && (now - lastStepTime > 280)) {
           lastStepTime = now;
 
@@ -792,7 +1007,6 @@
           const absX = Math.abs(adjustedX);
           const absY = Math.abs(adjustedY);
 
-          // Evaluasi arah langkah
           if (absX > 2.2 && absX > absY * 0.7) {
             detectedDir = (adjustedX > 0) ? 'right' : 'left';
           } else {
@@ -854,6 +1068,12 @@
         playWhistle();
       }
 
+      // Update posisi lokal agar di layar sendiri langsung bergerak instan
+      if (uniquePlayerKey && roomPlayers[uniquePlayerKey]) {
+        roomPlayers[uniquePlayerKey].x = localPlayerPos.x;
+        roomPlayers[uniquePlayerKey].y = localPlayerPos.y;
+      }
+
       syncPlayerStateToReferee(bonusScore);
       renderArena();
     }
@@ -862,13 +1082,22 @@
       if (currentRoleType === 'player' && refereeConn && refereeConn.open) {
         refereeConn.send({
           type: 'player_update',
-          playerKey: `${team}_${role}`,
+          playerKey: uniquePlayerKey,
           x: localPlayerPos.x,
           y: localPlayerPos.y,
           steps: totalSteps,
           inRespawn: inRespawn,
           scoreBonusA: (team === 'A') ? bonusScore : 0,
-          scoreBonusB: (team === 'B') ? bonusScore : 0
+          scoreBonusB: (team === 'B') ? bonusScore : 0,
+          playerData: {
+            name: playerName,
+            team: team,
+            role: role,
+            x: localPlayerPos.x,
+            y: localPlayerPos.y,
+            steps: totalSteps,
+            inRespawn: inRespawn
+          }
         });
       }
     }
@@ -877,7 +1106,7 @@
       processPhysicalStep(dir);
     }
 
-    // --- 7. RENDERING ARENA (CANVAS) ---
+    // --- 8. RENDERING ARENA (CANVAS) ---
     function renderArena() {
       const canvas = document.getElementById('game-canvas');
       const ctx = canvas.getContext('2d');
@@ -924,23 +1153,23 @@
 
       Object.keys(roomPlayers).forEach(pKey => {
         const p = roomPlayers[pKey];
-        const isSelf = (currentRoleType === 'player' && pKey === `${team}_${role}`);
+        const isSelf = (currentRoleType === 'player' && pKey === uniquePlayerKey);
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, isSelf ? 13 : 9, 0, Math.PI * 2);
         ctx.fillStyle = (p.team === 'A') ? '#ef4444' : '#3b82f6';
         ctx.fill();
-        ctx.lineWidth = isSelf ? 3 : 1;
+        ctx.lineWidth = isSelf ? 3 : 1.5;
         ctx.strokeStyle = '#ffffff';
         ctx.stroke();
 
-        ctx.fillStyle = isSelf ? '#fbbf24' : '#cbd5e1';
-        ctx.font = 'bold 9px sans-serif';
-        ctx.fillText(p.name || pKey, p.x - 12, p.y - 14);
+        ctx.fillStyle = isSelf ? '#fbbf24' : '#f8fafc';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillText(p.name || pKey, p.x - 14, p.y - 14);
       });
     }
 
-    // --- 8. AUDIO HELPER ---
+    // --- 9. AUDIO HELPER ---
     function initAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -965,10 +1194,11 @@
       setTimeout(() => playBeep(1200), 120);
     }
 
-    // --- 9. RAPOR EVALUASI & PDF ---
+    // --- 10. RAPOR EVALUASI & PDF ---
     function finishMatch() {
       releaseWakeLock();
       clearInterval(reconnectTimer);
+      clearInterval(handshakeAckTimer);
       reconnectTimer = null;
 
       document.getElementById('pocket-lock-overlay').classList.add('hidden');
@@ -996,6 +1226,7 @@
     function resetToLobby() {
       releaseWakeLock();
       clearInterval(reconnectTimer);
+      clearInterval(handshakeAckTimer);
       reconnectTimer = null;
       if (peer) {
         peer.destroy();
@@ -1006,10 +1237,16 @@
       document.getElementById('view-waiting').classList.add('hidden');
       document.getElementById('view-gameplay').classList.add('hidden');
       document.getElementById('view-lobby').classList.remove('hidden');
+      document.getElementById('referee-player-roster').classList.add('hidden');
+      document.getElementById('hud-online-count').classList.add('hidden');
+      document.getElementById('student-action-bar').classList.remove('hidden');
+      document.getElementById('student-dpad').classList.remove('hidden');
       totalSteps = 0;
       teamScoreA = 0;
       teamScoreB = 0;
       roomPlayers = {};
+      clientConnections = {};
+      uniquePlayerKey = '';
       currentGameState = 'waiting';
       updateConnBadge('Standby', 'bg-slate-800 text-slate-400', 'bg-slate-500');
     }
